@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#FF4500" />
+    <meta
+      name="description"
+      content="RedCatch - A modern Reddit content aggregator with category filtering and search capabilities"
+    />
+    <meta name="keywords" content="reddit, content, aggregator, news, gaming, technology, programming, sports" />
+    <meta name="author" content="RedCatch" />
+    <meta property="og:title" content="RedCatch" />
+    <meta property="og:description" content="A modern Reddit content aggregator with category filtering and search capabilities" />
+    <meta property="og:image" content="%PUBLIC_URL%/redcatch-512.png" />
+    <meta property="og:url" content="https://redcatch.app" />
+    <meta name="twitter:card" content="summary_large_image" />
+    
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/redcatch-192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="preconnect" href="https://www.reddit.com" />
+    <link rel="dns-prefetch" href="https://www.reddit.com" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link 
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" 
+      rel="stylesheet"
+    />
+    
+    <title>RedCatch - Reddit Content Aggregator</title>
+    
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: #f6f7f8;
+      }
+
+      #root {
+        min-height: 100vh;
+      }
+
+      /* Loading spinner */
+      .initial-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        background-color: #ffffff;
+      }
+
+      .initial-loading::after {
+        content: '';
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #FF4500;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run RedCatch.</noscript>
+    <div id="root">
+      <div class="initial-loading"></div>
+    </div>
+  </body>
+</html>
