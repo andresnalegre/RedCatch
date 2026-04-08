@@ -1,60 +1,70 @@
-# RedCatch
+<div align="center">
+  <img src="public/redcatch-192.png" alt="RedCatch" width="160" />
 
-**RedCatch** is a modern web application built with React that seamlessly integrates with Reddit's API to fetch, filter, and display posts in a user-friendly interface. The application allows users to explore Reddit content through customized categories and perform specific searches within their areas of interest.
+  # RedCatch
+
+  A modern Reddit content aggregator with category filtering and search.
+
+  ![React](https://img.shields.io/badge/React-18-blue?logo=react)
+  ![Redux](https://img.shields.io/badge/Redux_Toolkit-2-764ABC?logo=redux&logoColor=white)
+  ![Platform](https://img.shields.io/badge/Platform-Web-orange?logo=googlechrome)
+  
+  [![Live](https://img.shields.io/badge/Live-RedCatch-blue?style=flat-square)](https://andresnalegre.github.io/RedCatch/)
+  [![GitHub](https://img.shields.io/badge/Made%20by-Andres%20Nicolas%20Alegre-brightgreen?style=flat-square)](https://github.com/andresnalegre)
+</div>
 
 ---
+
+## About
+
+**RedCatch** is a Reddit content aggregator that lets you browse posts by category and search across subreddits — all from the browser, with no account required.
+
+It consumes the Reddit JSON API directly, with infinite scroll, debounced search, and post detail with comments.
 
 ## Features
 
-- Friendly UI
-- Realtime Post fetching
-- Filters
-- Custom search
+- Browse posts by category: Popular, All, Gaming, Sports, News, Technology, Programming
+- Debounced search within the current category
+- Infinite scroll with automatic pagination
+- Post detail modal with nested comments
+- Fixed footer always visible
 
 ---
 
-## Technologies Used
+## Run locally
 
-- Javascript
-- React
-- API
-- Redux
+### Requirements
+
+- Node.js 18+
+
+### Setup
+
+```bash
+git clone https://github.com/andresnalegre/RedCatch
+cd RedCatch
+npm install
+npm start
+```
 
 ---
 
-## How to use
+## Tech stack
 
-1. **Clone the Project**:
-   - Open your terminal, go to the folder where you want to save the project, and run:
+| Layer      | Technology        |
+|------------|-------------------|
+| UI         | React 18          |
+| State      | Redux Toolkit 2   |
+| Styling    | Styled Components |
+| Animation  | Framer Motion     |
+| HTTP       | Axios             |
+| API        | Reddit JSON API   |
 
-     ```bash
-     git clone https://github.com/andresnalegre/RedCatch
-     ```
-     
-2. **Go to the Project Folder**:
-   - Change to the project folder:
-
-     ```bash
-     cd RedCatch
-     ```
-     
-3. **Run the Project**:
-   - Run the project with:
-
-     ```bash
-     npm install
-     npm start
-     ```
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE)
-
----
+This project is licensed under the [MIT License](LICENSE).
 
 ## Contributing
 
-Contributions are welcome! If you have any improvements or new features you’d like to add, feel free to fork the repository and submit a pull request. Please ensure that your code follows the existing style and structure.
-
-[![GitHub](https://img.shields.io/badge/Made%20by-Andres%20Nicolas%20Alegre-brightgreen)](https://github.com/andresnalegre)
+Contributions are welcome! Feel free to fork the repository and submit a pull request. Please ensure your code follows the existing style and structure.
