@@ -18,7 +18,8 @@ const HeaderContainer = styled.header`
   right: 0;
   z-index: 1000;
   height: 80px;
-  transition: all 0.3s ease;
+  transform: translateZ(0);
+  will-change: transform;
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -27,6 +28,8 @@ const HeaderContainer = styled.header`
     height: auto;
     padding: 0.75rem 1rem;
     gap: 0.5rem;
+    transform: translateZ(0);
+    will-change: transform;
   }
 `;
 
