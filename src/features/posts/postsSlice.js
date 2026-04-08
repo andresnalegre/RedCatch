@@ -2,13 +2,13 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 const subredditMap = {
-  gaming: ['gaming', 'Games', 'pcgaming', 'GameDeals', 'Steam'],
-  sports: ['sports', 'nba', 'soccer', 'nfl', 'formula1'],
-  news: ['news', 'worldnews', 'politics', 'technews', 'science'],
-  technology: ['technology', 'tech', 'gadgets', 'hardware', 'Futurology'],
-  programming: ['programming', 'webdev', 'learnprogramming', 'javascript', 'reactjs'],
-  popular: ['popular'],
-  all: ['all']
+  gaming: 'gaming',
+  sports: 'sports',
+  news: 'worldnews',
+  technology: 'technology',
+  programming: 'programming',
+  popular: 'popular',
+  all: 'all'
 };
 
 const initialState = {
@@ -24,11 +24,8 @@ const initialState = {
 };
 
 const buildUrl = (category, after = null) => {
-  if (category === 'popular' || category === 'all') {
-    return `https://www.reddit.com/r/${category}.json${after ? `?after=${after}` : ''}`;
-  }
-  const subreddits = subredditMap[category].join('+');
-  return `https://www.reddit.com/r/${subreddits}.json${after ? `?after=${after}` : ''}`;
+  const subreddit = subredditMap[category] || category;
+  return `https://www.reddit.com/r/${subreddit}.json${after ? `?after=${after}` : ''}`;
 };
 
 const processRedditResponse = (data) => {
@@ -58,10 +55,7 @@ export const fetchPosts = createAsyncThunk(
   async ({ category = 'popular', after = null }, { rejectWithValue }) => {
     try {
       const url = buildUrl(category, after);
-      const response = await axios.get(url, {
-        headers: { 'Accept': 'application/json' },
-        timeout: 10000
-      });
+      const response = await axios.get(url, { timeout: 10000 });
       const posts = processRedditResponse(response.data);
       return {
         posts,
@@ -82,18 +76,15 @@ export const searchPosts = createAsyncThunk(
         return { posts: [], after: null, hasMore: false, searchTerm: '' };
       }
 
+      const subreddit = subredditMap[category] || category;
       let url;
       if (category === 'popular' || category === 'all') {
         url = `https://www.reddit.com/search.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=25`;
       } else {
-        const subreddits = subredditMap[category].join('+');
-        url = `https://www.reddit.com/r/${subreddits}/search.json?q=${encodeURIComponent(searchTerm)}&restrict_sr=on&sort=relevance&limit=25`;
+        url = `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchTerm)}&restrict_sr=on&sort=relevance&limit=25`;
       }
 
-      const response = await axios.get(url, {
-        headers: { 'Accept': 'application/json' },
-        timeout: 10000
-      });
+      const response = await axios.get(url, { timeout: 10000 });
       const posts = processRedditResponse(response.data);
       return {
         posts,
