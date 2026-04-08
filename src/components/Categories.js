@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { setCurrentCategory, clearSearch } from '../features/posts/postsSlice';
@@ -12,6 +12,18 @@ const CategoryContainer = styled.div`
   top: 90px;
   height: auto;
   max-height: 420px;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 110px;
+    left: 0;
+    right: 0;
+    z-index: 998;
+    border-radius: 0 0 8px 8px;
+    display: ${props => props.open ? 'block' : 'none'};
+    max-height: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
 `;
 
 const CategoryTitle = styled.h2`
@@ -19,6 +31,10 @@ const CategoryTitle = styled.h2`
   font-size: 1.2rem;
   color: #1a1a1b;
   font-weight: 600;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const CategoryList = styled.div`
@@ -51,43 +67,103 @@ const CategoryButton = styled.button`
   }
 `;
 
+const HamburgerButton = styled.button`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: fixed;
+    top: 110px;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    background: white;
+    border: none;
+    border-bottom: 1px solid #edeff1;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1a1a1b;
+    cursor: pointer;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  }
+`;
+
+const HamburgerIcon = styled.span`
+  font-size: 1.2rem;
+`;
+
+const ActiveLabel = styled.span`
+  color: #ff4500;
+`;
+
+const Overlay = styled.div`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: ${props => props.open ? 'block' : 'none'};
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 997;
+    background: rgba(0, 0, 0, 0.3);
+  }
+`;
+
 const categories = [
   { id: 'popular', name: 'Popular' },
   { id: 'all', name: 'All' },
-  { id: 'gaming', name: 'Gaming', subreddits: ['gaming', 'Games', 'pcgaming', 'GameDeals', 'Steam', 'videogames', 'esports', 'gamernews'] },
-  { id: 'sports', name: 'Sports', subreddits: ['sports', 'nba', 'soccer', 'nfl', 'baseball', 'hockey', 'formula1', 'MMA', 'tennis', 'basketball'] },
-  { id: 'news', name: 'News', subreddits: ['news', 'worldnews', 'politics', 'technews', 'UpliftingNews', 'science', 'business', 'economics'] },
-  { id: 'technology', name: 'Technology', subreddits: ['technology', 'tech', 'gadgets', 'hardware', 'artificial', 'Futurology', 'cybersecurity'] },
-  { id: 'programming', name: 'Programming', subreddits: ['programming', 'coding', 'webdev', 'learnprogramming', 'javascript', 'reactjs', 'python', 'node', 'typescript', 'java', 'csharp', 'cpp', 'golang', 'rust', 'programminghumor'] }
+  { id: 'gaming', name: 'Gaming' },
+  { id: 'sports', name: 'Sports' },
+  { id: 'news', name: 'News' },
+  { id: 'technology', name: 'Technology' },
+  { id: 'programming', name: 'Programming' }
 ];
 
 function Categories() {
   const dispatch = useDispatch();
   const currentCategory = useSelector(state => state.posts.currentCategory);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleCategoryClick = (categoryId) => {
     if (categoryId !== currentCategory) {
       dispatch(clearSearch());
       dispatch(setCurrentCategory(categoryId));
     }
+    setMenuOpen(false);
   };
 
+  const currentLabel = categories.find(c => c.id === currentCategory)?.name || 'Popular';
+
   return (
-    <CategoryContainer>
-      <CategoryTitle>Categories</CategoryTitle>
-      <CategoryList>
-        {categories.map(category => (
-          <CategoryButton
-            key={category.id}
-            active={currentCategory === category.id}
-            onClick={() => handleCategoryClick(category.id)}
-            title={category.subreddits ? `Includes: ${category.subreddits.join(', ')}` : ''}
-          >
-            {category.name}
-          </CategoryButton>
-        ))}
-      </CategoryList>
-    </CategoryContainer>
+    <>
+      <HamburgerButton onClick={() => setMenuOpen(prev => !prev)}>
+        <HamburgerIcon>{menuOpen ? '✕' : '☰'}</HamburgerIcon>
+        Category: <ActiveLabel>{currentLabel}</ActiveLabel>
+      </HamburgerButton>
+
+      <Overlay open={menuOpen} onClick={() => setMenuOpen(false)} />
+
+      <CategoryContainer open={menuOpen}>
+        <CategoryTitle>Categories</CategoryTitle>
+        <CategoryList>
+          {categories.map(category => (
+            <CategoryButton
+              key={category.id}
+              active={currentCategory === category.id}
+              onClick={() => handleCategoryClick(category.id)}
+            >
+              {category.name}
+            </CategoryButton>
+          ))}
+        </CategoryList>
+      </CategoryContainer>
+    </>
   );
 }
 

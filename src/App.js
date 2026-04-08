@@ -15,7 +15,7 @@ const AppContainer = styled.div`
   padding-bottom: 40px;
 
   @media (max-width: 768px) {
-    padding-top: 130px;
+    padding-top: 160px;
   }
 `;
 
