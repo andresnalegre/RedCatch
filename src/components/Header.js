@@ -7,7 +7,7 @@ import RedcatchLogo from '../assets/Redcatch.png';
 
 const HeaderContainer = styled.header`
   background-color: #ffffff;
-  padding: 1rem 2rem;
+  padding: 0.75rem 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
@@ -19,6 +19,15 @@ const HeaderContainer = styled.header`
   z-index: 1000;
   height: 80px;
   transition: all 0.3s ease;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: auto;
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+  }
 `;
 
 const LogoContainer = styled.a`
@@ -44,6 +53,10 @@ const LogoImage = styled.img`
   width: auto;
   object-fit: contain;
   transition: all 0.3s ease;
+
+  @media (max-width: 768px) {
+    height: 60px;
+  }
 `;
 
 const Logo = styled.h1`
@@ -54,6 +67,10 @@ const Logo = styled.h1`
   font-family: Arial, sans-serif;
   user-select: none;
   transition: all 0.3s ease;
+
+  @media (max-width: 768px) {
+    font-size: 1.8rem;
+  }
 `;
 
 const SearchContainer = styled.div`
@@ -62,7 +79,7 @@ const SearchContainer = styled.div`
   transition: all 0.3s ease;
 
   @media (max-width: 768px) {
-    width: 200px;
+    width: 100%;
   }
 `;
 

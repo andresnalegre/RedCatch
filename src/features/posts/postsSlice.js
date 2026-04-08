@@ -2,11 +2,11 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 const subredditMap = {
-  gaming: ['gaming', 'Games', 'pcgaming', 'GameDeals', 'Steam', 'videogames', 'esports', 'gamernews'],
-  sports: ['sports', 'nba', 'soccer', 'nfl', 'baseball', 'hockey', 'formula1', 'MMA', 'tennis'],
-  news: ['news', 'worldnews', 'politics', 'technews', 'UpliftingNews', 'science', 'business'],
-  technology: ['technology', 'tech', 'gadgets', 'hardware', 'artificial', 'Futurology', 'cybersecurity'],
-  programming: ['programming', 'coding', 'webdev', 'learnprogramming', 'javascript', 'reactjs', 'python'],
+  gaming: ['gaming', 'Games', 'pcgaming', 'GameDeals', 'Steam'],
+  sports: ['sports', 'nba', 'soccer', 'nfl', 'formula1'],
+  news: ['news', 'worldnews', 'politics', 'technews', 'science'],
+  technology: ['technology', 'tech', 'gadgets', 'hardware', 'Futurology'],
+  programming: ['programming', 'webdev', 'learnprogramming', 'javascript', 'reactjs'],
   popular: ['popular'],
   all: ['all']
 };
@@ -58,7 +58,10 @@ export const fetchPosts = createAsyncThunk(
   async ({ category = 'popular', after = null }, { rejectWithValue }) => {
     try {
       const url = buildUrl(category, after);
-      const response = await axios.get(url);
+      const response = await axios.get(url, {
+        headers: { 'Accept': 'application/json' },
+        timeout: 10000
+      });
       const posts = processRedditResponse(response.data);
       return {
         posts,
@@ -87,7 +90,10 @@ export const searchPosts = createAsyncThunk(
         url = `https://www.reddit.com/r/${subreddits}/search.json?q=${encodeURIComponent(searchTerm)}&restrict_sr=on&sort=relevance&limit=25`;
       }
 
-      const response = await axios.get(url);
+      const response = await axios.get(url, {
+        headers: { 'Accept': 'application/json' },
+        timeout: 10000
+      });
       const posts = processRedditResponse(response.data);
       return {
         posts,

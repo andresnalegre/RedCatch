@@ -13,6 +13,10 @@ const AppContainer = styled.div`
   background-color: #f6f7f8;
   padding-top: 80px;
   padding-bottom: 40px;
+
+  @media (max-width: 768px) {
+    padding-top: 130px;
+  }
 `;
 
 const MainContent = styled.div`
