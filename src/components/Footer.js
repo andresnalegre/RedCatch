@@ -57,10 +57,7 @@ function Footer() {
 
   return (
     <FooterContainer offset={offset}>
-      © {new Date().getFullYear()} RedCatch — content sourced from{' '}
-      <FooterLink href="https://www.reddit.com" target="_blank" rel="noopener noreferrer">
-        Reddit
-      </FooterLink>
+      © {new Date().getFullYear()} RedCatch. All rights reserved.
     </FooterContainer>
   );
 }
