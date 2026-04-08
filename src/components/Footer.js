@@ -13,11 +13,6 @@ const FooterContainer = styled.footer`
   left: 0;
   right: 0;
   z-index: 999;
-
-  @media (max-width: 768px) {
-    position: static;
-    margin-top: 2rem;
-  }
 `;
 
 const FooterLink = styled.a`

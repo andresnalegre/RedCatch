@@ -12,10 +12,11 @@ const AppContainer = styled.div`
   min-height: 100vh;
   background-color: #f6f7f8;
   padding-top: 80px;
-  padding-bottom: 40px;
+  padding-bottom: 50px;
 
   @media (max-width: 768px) {
-    padding-top: 160px;
+    padding-top: 170px;
+    padding-bottom: 50px;
   }
 `;
 

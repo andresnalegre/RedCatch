@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import styled, { createGlobalStyle } from 'styled-components';
+import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchPosts, selectSearchTerm } from '../features/posts/postsSlice';
 import PostDetail from '../components/PostDetail';
@@ -9,6 +9,21 @@ const GlobalStyle = createGlobalStyle`
   body {
     overflow: ${props => props.modalOpen ? 'hidden' : 'auto'};
   }
+`;
+
+const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
+
+const Spinner = styled.div`
+  width: 36px;
+  height: 36px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ff4500;
+  border-radius: 50%;
+  animation: ${spin} 0.8s linear infinite;
+  margin: 2rem auto;
 `;
 
 const PostsContainer = styled.div`
@@ -58,15 +73,6 @@ const PostImage = styled.img`
   border-radius: 4px;
   margin-top: 1rem;
   object-fit: cover;
-`;
-
-const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-  color: #1a1a1b;
-  font-size: 1.1rem;
 `;
 
 const ErrorContainer = styled.div`
@@ -154,6 +160,10 @@ function PostsList() {
     );
   }
 
+  if (loading && items.length === 0) {
+    return <Spinner />;
+  }
+
   if (filteredPosts.length === 0 && !loading) {
     return (
       <NoPostsMessage>
@@ -199,16 +209,7 @@ function PostsList() {
           ))}
         </AnimatePresence>
         <div ref={observerTarget}>
-          {loading && (
-            <LoadingContainer>
-              <motion.div
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                Loading more posts...
-              </motion.div>
-            </LoadingContainer>
-          )}
+          {loading && <Spinner />}
         </div>
 
         <AnimatePresence>

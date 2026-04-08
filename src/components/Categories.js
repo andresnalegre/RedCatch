@@ -15,7 +15,7 @@ const CategoryContainer = styled.div`
 
   @media (max-width: 768px) {
     position: fixed;
-    top: 110px;
+    top: 155px;
     left: 0;
     right: 0;
     z-index: 998;
@@ -75,7 +75,7 @@ const HamburgerButton = styled.button`
     align-items: center;
     gap: 0.5rem;
     position: fixed;
-    top: 110px;
+    top: 120px;
     left: 0;
     right: 0;
     z-index: 999;
