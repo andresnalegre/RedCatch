@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/RedCatch/static/css/main.69338b20.css",
-    "main.js": "/RedCatch/static/js/main.4664bc4f.js",
+    "main.js": "/RedCatch/static/js/main.d94e7512.js",
     "static/media/Redcatch.png": "/RedCatch/static/media/Redcatch.24786aa0cfef62bb0562.png",
     "index.html": "/RedCatch/index.html",
     "main.69338b20.css.map": "/RedCatch/static/css/main.69338b20.css.map",
-    "main.4664bc4f.js.map": "/RedCatch/static/js/main.4664bc4f.js.map"
+    "main.d94e7512.js.map": "/RedCatch/static/js/main.d94e7512.js.map"
   },
   "entrypoints": [
     "static/css/main.69338b20.css",
-    "static/js/main.4664bc4f.js"
+    "static/js/main.d94e7512.js"
   ]
 }
