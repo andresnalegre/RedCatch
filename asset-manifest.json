@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/RedCatch/static/css/main.69338b20.css",
+    "main.js": "/RedCatch/static/js/main.c8511375.js",
+    "static/media/Redcatch.png": "/RedCatch/static/media/Redcatch.24786aa0cfef62bb0562.png",
+    "index.html": "/RedCatch/index.html",
+    "main.69338b20.css.map": "/RedCatch/static/css/main.69338b20.css.map",
+    "main.c8511375.js.map": "/RedCatch/static/js/main.c8511375.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.69338b20.css",
+    "static/js/main.c8511375.js"
+  ]
+}
