@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { fetchPosts, setCurrentCategory } from '../features/posts/postsSlice';
+import { setCurrentCategory, clearSearch } from '../features/posts/postsSlice';
 
 const CategoryContainer = styled.div`
   background: white;
@@ -65,13 +65,10 @@ function Categories() {
   const dispatch = useDispatch();
   const currentCategory = useSelector(state => state.posts.currentCategory);
 
-  const handleCategoryClick = async (categoryId) => {
+  const handleCategoryClick = (categoryId) => {
     if (categoryId !== currentCategory) {
+      dispatch(clearSearch());
       dispatch(setCurrentCategory(categoryId));
-      await dispatch(fetchPosts({ 
-        category: categoryId,
-        after: null
-      }));
     }
   };
 

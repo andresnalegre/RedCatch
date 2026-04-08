@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback, useMemo, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux';
 import styled, { createGlobalStyle } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchPosts } from '../features/posts/postsSlice';
+import { fetchPosts, selectSearchTerm } from '../features/posts/postsSlice';
 import PostDetail from '../components/PostDetail';
 
 const GlobalStyle = createGlobalStyle`
@@ -15,28 +15,6 @@ const PostsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding-right: 1rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  height: calc(100vh - 140px);
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: #555;
-  }
 `;
 
 const PostCard = styled(motion.div)`
@@ -101,13 +79,9 @@ const ErrorContainer = styled.div`
 `;
 
 const PostsHeader = styled.div`
-  position: sticky;
-  top: 0;
-  width: 880px;
-  background: #f6f7f8;
+  width: 100%;
   padding: 1rem 0;
   margin-bottom: 1rem;
-  z-index: 1;
 `;
 
 const NoPostsMessage = styled.div`
@@ -122,7 +96,7 @@ const NoPostsMessage = styled.div`
 function PostsList() {
   const dispatch = useDispatch();
   const { items, loading, error, currentCategory, after } = useSelector(state => state.posts);
-  const searchTerm = useSelector(state => state.filters.searchTerm);
+  const searchTerm = useSelector(selectSearchTerm);
   const observerTarget = useRef(null);
   const [selectedPost, setSelectedPost] = useState(null);
 
@@ -161,15 +135,10 @@ function PostsList() {
   }, [loadMorePosts, loading]);
 
   const filteredPosts = useMemo(() => {
-    let filtered = items;
-    
-    if (searchTerm) {
-      filtered = filtered.filter(post =>
-        post.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    return filtered;
+    if (!searchTerm) return items;
+    return items.filter(post =>
+      post.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   }, [items, searchTerm]);
 
   const handlePostClick = useCallback((post) => {
@@ -213,27 +182,17 @@ function PostsList() {
             >
               <PostTitle>{post.title}</PostTitle>
               <PostMetadata>
-                <MetadataItem>
-                  👤 u/{post.author}
-                </MetadataItem>
-                <MetadataItem>
-                  📚 r/{post.subreddit}
-                </MetadataItem>
-                <MetadataItem>
-                  ⬆️ {new Intl.NumberFormat().format(post.score)} points
-                </MetadataItem>
-                <MetadataItem>
-                  💬 {new Intl.NumberFormat().format(post.num_comments)} comments
-                </MetadataItem>
+                <MetadataItem>👤 u/{post.author}</MetadataItem>
+                <MetadataItem>📚 r/{post.subreddit}</MetadataItem>
+                <MetadataItem>⬆️ {new Intl.NumberFormat().format(post.score)} points</MetadataItem>
+                <MetadataItem>💬 {new Intl.NumberFormat().format(post.num_comments)} comments</MetadataItem>
               </PostMetadata>
               {post.thumbnail && post.thumbnail !== 'self' && (
-                <PostImage 
-                  src={post.thumbnail} 
-                  alt="" 
+                <PostImage
+                  src={post.thumbnail}
+                  alt=""
                   loading="lazy"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
+                  onError={(e) => { e.target.style.display = 'none'; }}
                 />
               )}
             </PostCard>

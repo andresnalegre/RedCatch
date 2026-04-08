@@ -1,16 +1,18 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { fetchPosts, setCurrentCategory, clearSearch } from './features/posts/postsSlice';
+import { fetchPosts } from './features/posts/postsSlice';
 import Categories from './components/Categories';
 import PostsList from './components/PostsList';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AppContainer = styled.div`
   min-height: 100vh;
   background-color: #f6f7f8;
   padding-top: 80px;
+  padding-bottom: 40px;
 `;
 
 const MainContent = styled.div`
@@ -44,18 +46,17 @@ function App() {
   const [error, setError] = useState(null);
   const { currentCategory, error: stateError } = useSelector(state => state.posts);
 
-  const loadPosts = useCallback(async (category = 'popular') => {
-    try {
-      await dispatch(fetchPosts({ category })).unwrap();
-    } catch (err) {
-      setError('Failed to load posts. Please try again later.');
-      setTimeout(() => setError(null), 5000);
-    }
-  }, [dispatch]);
-
   useEffect(() => {
-    loadPosts(currentCategory);
-  }, [currentCategory, loadPosts]);
+    const load = async () => {
+      try {
+        await dispatch(fetchPosts({ category: currentCategory })).unwrap();
+      } catch (err) {
+        setError('Failed to load posts. Please try again later.');
+        setTimeout(() => setError(null), 5000);
+      }
+    };
+    load();
+  }, [currentCategory, dispatch]);
 
   useEffect(() => {
     if (stateError) {
@@ -63,13 +64,6 @@ function App() {
       setTimeout(() => setError(null), 5000);
     }
   }, [stateError]);
-
-  const handleCategoryChange = useCallback(async (category) => {
-    if (category !== currentCategory) {
-      dispatch(clearSearch());
-      dispatch(setCurrentCategory(category));
-    }
-  }, [currentCategory, dispatch]);
 
   return (
     <AppContainer>
@@ -89,12 +83,11 @@ function App() {
       <Header />
 
       <MainContent>
-        <Categories 
-          currentCategory={currentCategory}
-          onCategoryChange={handleCategoryChange} 
-        />
+        <Categories />
         <PostsList />
       </MainContent>
+
+      <Footer />
     </AppContainer>
   );
 }

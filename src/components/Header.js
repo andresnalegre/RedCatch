@@ -126,12 +126,11 @@ const Header = () => {
       if (term.trim().length >= 3) {
         await dispatch(searchPosts({ searchTerm: term, category: currentCategory })).unwrap();
       } else if (term.trim().length === 0) {
-        await dispatch(clearSearch());
+        dispatch(clearSearch());
         await dispatch(fetchPosts({ category: currentCategory })).unwrap();
       }
     } catch (err) {
       setError(err.message || 'An error occurred while searching');
-      console.error('Search error:', err);
     }
   }, [dispatch, currentCategory]);
 
@@ -148,25 +147,14 @@ const Header = () => {
   }, [performSearch]);
 
   useEffect(() => {
-    const initializePosts = async () => {
-      try {
-        setError(null);
-        setSearchInput('');
-        await dispatch(clearSearch());
-        await dispatch(fetchPosts({ category: currentCategory })).unwrap();
-      } catch (err) {
-        setError(err.message || 'Failed to fetch posts');
-        console.error('Fetch error:', err);
-      }
-    };
-
-    initializePosts();
+    setSearchInput('');
+    dispatch(clearSearch());
   }, [currentCategory, dispatch]);
 
   const handleSearch = useCallback((e) => {
     const newSearchTerm = e.target.value;
     setSearchInput(newSearchTerm);
-    
+
     if (newSearchTerm.trim().length === 0) {
       if (debouncedSearchRef.current) {
         debouncedSearchRef.current.cancel();
@@ -177,7 +165,7 @@ const Header = () => {
     }
   }, [performSearch]);
 
-  const handleKeyPress = useCallback((e) => {
+  const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (debouncedSearchRef.current) {
@@ -204,10 +192,10 @@ const Header = () => {
           placeholder={`Search in ${currentCategory}...`}
           value={searchInput}
           onChange={handleSearch}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           disabled={loading}
         />
-        <SearchIcon 
+        <SearchIcon
           onClick={() => !loading && performSearch(searchInput)}
           style={{ opacity: loading ? 0.5 : 1 }}
         >

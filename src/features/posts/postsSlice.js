@@ -60,14 +60,12 @@ export const fetchPosts = createAsyncThunk(
       const url = buildUrl(category, after);
       const response = await axios.get(url);
       const posts = processRedditResponse(response.data);
-
       return {
         posts,
         after: response.data.data.after,
         hasMore: !!response.data.data.after && posts.length > 0
       };
     } catch (error) {
-      console.error('Fetch error:', error);
       return rejectWithValue(`Failed to fetch posts from ${category}`);
     }
   }
@@ -91,7 +89,6 @@ export const searchPosts = createAsyncThunk(
 
       const response = await axios.get(url);
       const posts = processRedditResponse(response.data);
-
       return {
         posts,
         after: response.data.data.after,
@@ -99,7 +96,6 @@ export const searchPosts = createAsyncThunk(
         searchTerm
       };
     } catch (error) {
-      console.error('Search error:', error);
       return rejectWithValue('Failed to search posts');
     }
   }
@@ -134,7 +130,6 @@ const postsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Posts
       .addCase(fetchPosts.pending, (state) => {
         if (state.items.length === 0) {
           state.loading = true;
@@ -147,7 +142,6 @@ const postsSlice = createSlice({
         state.loading = false;
         state.loadingMore = false;
         state.error = null;
-        
         if (action.payload.posts.length > 0) {
           const newPosts = action.payload.posts.filter(
             newPost => !state.items.some(existingPost => existingPost.id === newPost.id)
@@ -169,7 +163,6 @@ const postsSlice = createSlice({
         state.error = action.payload;
         state.hasMore = false;
       })
-      // Search Posts
       .addCase(searchPosts.pending, (state) => {
         state.loading = true;
         state.isSearching = true;
@@ -180,7 +173,6 @@ const postsSlice = createSlice({
         state.isSearching = false;
         state.searchTerm = action.payload.searchTerm || '';
         state.error = null;
-        
         if (action.payload.posts.length > 0) {
           state.items = action.payload.posts;
           state.after = action.payload.after;
@@ -200,7 +192,6 @@ const postsSlice = createSlice({
   },
 });
 
-// Selectors
 export const selectPosts = (state) => state.posts.items;
 export const selectCurrentCategory = (state) => state.posts.currentCategory;
 export const selectLoading = (state) => state.posts.loading;
