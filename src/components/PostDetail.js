@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import axios from 'axios';
 
 const Overlay = styled(motion.div)`
@@ -15,11 +15,6 @@ const Overlay = styled(motion.div)`
   padding: 20px;
   display: flex;
   justify-content: center;
-
-  @media (max-width: 768px) {
-    padding: 0;
-    background: #f6f7f8;
-  }
 `;
 
 const DetailContainer = styled(motion.div)`
@@ -30,6 +25,7 @@ const DetailContainer = styled(motion.div)`
   border-radius: 12px;
   padding: 30px;
   position: relative;
+  min-height: min-content;
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
@@ -51,74 +47,63 @@ const DetailContainer = styled(motion.div)`
   &::-webkit-scrollbar-thumb:hover {
     background: #555;
   }
-
-  @media (max-width: 768px) {
-    margin: 0;
-    border-radius: 0;
-    padding: 16px;
-    max-height: 100vh;
-    min-height: 100vh;
-    box-shadow: none;
-  }
 `;
 
 const CloseButton = styled.button`
   position: sticky;
-  top: 0;
+  top: 10px;
   float: right;
-  background: #f6f7f8;
+  background: none;
   border: none;
-  font-size: 20px;
+  font-size: 28px;
   cursor: pointer;
   color: #666;
   z-index: 2;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   transition: all 0.2s ease;
-
+  
   &:hover {
     color: #ff4500;
     background: rgba(255, 69, 0, 0.1);
   }
+`;
 
-  @media (max-width: 768px) {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    float: none;
-    background: white;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  }
+const PostContent = styled.div`
+  margin: 25px 0;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: #1a1a1b;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  white-space: pre-wrap;
+  word-break: break-word;
 `;
 
 const PostHeader = styled.div`
-  margin-bottom: 20px;
-  padding-right: 40px;
-
+  margin-bottom: 25px;
+  
   h2 {
-    margin: 0 0 12px 0;
-    font-size: 1.4rem;
+    margin: 0 0 15px 0;
+    font-size: 1.8rem;
     line-height: 1.4;
     color: #1a1a1b;
     font-weight: 600;
-
-    @media (max-width: 768px) {
-      font-size: 1.2rem;
-    }
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   }
 `;
 
 const PostMetadata = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
   color: #787c7e;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 
   span {
     display: flex;
@@ -127,74 +112,42 @@ const PostMetadata = styled.div`
   }
 `;
 
-const PostContent = styled.div`
-  margin: 20px 0;
-  font-size: 1rem;
-  line-height: 1.7;
-  color: #1a1a1b;
-  white-space: pre-wrap;
-  word-break: break-word;
-`;
-
-const PostLink = styled.a`
-  display: block;
-  color: #ff4500;
-  font-size: 0.9rem;
-  text-decoration: none;
-  padding: 12px;
-  margin: 16px 0;
-  background: #f8f9fa;
-  border-radius: 8px;
-  word-break: break-all;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: #ff45001a;
-    color: #cc3700;
-  }
-`;
-
-const PostImage = styled.img`
-  max-width: 100%;
-  height: auto;
-  margin: 12px 0;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-`;
-
 const CommentsSection = styled.div`
-  margin-top: 24px;
+  margin-top: 30px;
   border-top: 2px solid #eee;
-  padding-top: 20px;
+  padding-top: 25px;
 
   h3 {
-    font-size: 1.2rem;
-    margin-bottom: 16px;
+    font-size: 1.4rem;
+    margin-bottom: 20px;
     color: #1a1a1b;
     font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   }
 `;
 
 const Comment = styled.div`
-  padding: 12px;
-  margin: 8px 0;
+  padding: 16px;
+  margin: 12px 0;
   border-left: 3px solid ${props => props.depth === 0 ? '#ff4500' : '#ff45001a'};
   background: ${props => props.depth % 2 === 0 ? 'white' : '#f8f9fa'};
-  margin-left: ${props => Math.min(props.depth * 16, 64)}px;
-  border-radius: 6px;
+  margin-left: ${props => Math.min(props.depth * 20, 200)}px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 
-  @media (max-width: 768px) {
-    margin-left: ${props => Math.min(props.depth * 10, 40)}px;
+  &:hover {
+    background: ${props => props.depth % 2 === 0 ? '#ff45000a' : '#ff45001a'};
   }
 `;
 
 const CommentHeader = styled.div`
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: #787c7e;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 
   strong {
     color: #1a1a1b;
@@ -203,27 +156,59 @@ const CommentHeader = styled.div`
 `;
 
 const CommentBody = styled.div`
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.6;
   color: #1a1a1b;
   white-space: pre-wrap;
   word-break: break-word;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 `;
 
 const LoadingSpinner = styled.div`
   display: flex;
   justify-content: center;
+  align-items: center;
   padding: 30px;
   color: #787c7e;
+  font-size: 1.1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 `;
 
 const ErrorMessage = styled.div`
   color: #ff4444;
-  padding: 16px;
+  padding: 20px;
   text-align: center;
   background: #ffebee;
   border-radius: 8px;
-  margin: 12px 0;
+  margin: 15px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+`;
+
+const PostImage = styled.img`
+  max-width: 100%;
+  height: auto;
+  margin: 15px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+`;
+
+const PostLink = styled.a`
+  display: block;
+  text-align: center;
+  color: #ff4500;
+  font-size: 1.1rem;
+  text-decoration: none;
+  padding: 15px;
+  margin: 20px 0;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+
+  &:hover {
+    background: #ff45001a;
+    color: #cc3700;
+  }
 `;
 
 function PostDetail({ post, onClose }) {
@@ -238,40 +223,47 @@ function PostDetail({ post, onClose }) {
         const response = await axios.get(
           `https://www.reddit.com/comments/${post.id}.json`
         );
+        
         const fetchedComments = response.data[1].data.children
           .filter(child => child.kind === 't1')
           .map(child => child.data);
+        
         setComments(fetchedComments);
         setLoading(false);
       } catch (err) {
+        console.error('Error fetching comments:', err);
         setError('Failed to load comments. Please try again later.');
         setLoading(false);
       }
     };
+
     fetchComments();
   }, [post.id]);
 
   const renderComment = (comment, depth = 0) => {
     if (!comment || !comment.body) return null;
+
     return (
       <div key={comment.id}>
         <Comment depth={depth}>
           <CommentHeader>
             <strong>u/{comment.author}</strong>
-            <span>⬆️ {new Intl.NumberFormat().format(comment.score)}</span>
+            <span>⬆️ {new Intl.NumberFormat().format(comment.score)} points</span>
           </CommentHeader>
           <CommentBody>{comment.body}</CommentBody>
         </Comment>
-        {comment.replies &&
-          comment.replies.data?.children
-            .filter(child => child.kind === 't1')
-            .map(child => renderComment(child.data, depth + 1))}
+        {comment.replies && 
+         comment.replies.data?.children
+          .filter(child => child.kind === 't1')
+          .map(child => renderComment(child.data, depth + 1))}
       </div>
     );
   };
 
   const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) onClose();
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
   };
 
   return (
@@ -286,18 +278,18 @@ function PostDetail({ post, onClose }) {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 50, opacity: 0 }}
       >
-        <CloseButton onClick={onClose}>✕</CloseButton>
-
+        <CloseButton onClick={onClose}>×</CloseButton>
+        
         <PostHeader>
           <h2>{post.title}</h2>
           <PostMetadata>
-            <span>u/{post.author}</span>
+            <span>Posted by u/{post.author}</span>
             <span>•</span>
             <span>r/{post.subreddit}</span>
             <span>•</span>
-            <span>⬆️ {new Intl.NumberFormat().format(post.score)}</span>
+            <span>⬆️ {new Intl.NumberFormat().format(post.score)} points</span>
             <span>•</span>
-            <span>💬 {new Intl.NumberFormat().format(post.num_comments)}</span>
+            <span>💬 {new Intl.NumberFormat().format(post.num_comments)} comments</span>
           </PostMetadata>
         </PostHeader>
 
@@ -306,19 +298,31 @@ function PostDetail({ post, onClose }) {
         )}
 
         {post.url && !post.url.includes('reddit.com') && (
-          <PostLink href={post.url} target="_blank" rel="noopener noreferrer">
-            🔗 {post.url}
+          <PostLink 
+            href={post.url} 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            {post.url}
           </PostLink>
         )}
 
         {post.thumbnail && post.thumbnail !== 'self' && (
-          <PostImage src={post.thumbnail} alt="" loading="lazy" />
+          <PostImage 
+            src={post.thumbnail} 
+            alt="" 
+            loading="lazy"
+          />
         )}
 
         <CommentsSection>
           <h3>Comments</h3>
-          {loading && <LoadingSpinner>Loading comments...</LoadingSpinner>}
-          {error && <ErrorMessage>{error}</ErrorMessage>}
+          {loading && (
+            <LoadingSpinner>Loading comments...</LoadingSpinner>
+          )}
+          {error && (
+            <ErrorMessage>{error}</ErrorMessage>
+          )}
           {!loading && !error && comments.length === 0 && (
             <div>No comments yet</div>
           )}
