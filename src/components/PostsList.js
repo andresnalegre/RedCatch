@@ -78,10 +78,26 @@ const PostImage = styled.img`
 const ErrorContainer = styled.div`
   background: #ffebee;
   color: #c62828;
-  padding: 1rem;
+  padding: 1.5rem;
   border-radius: 8px;
   margin: 1rem 0;
   text-align: center;
+`;
+
+const RetryButton = styled.button`
+  margin-top: 1rem;
+  padding: 0.6rem 1.5rem;
+  background: #ff4500;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #cc3700;
+  }
 `;
 
 const PostsHeader = styled.div`
@@ -151,11 +167,16 @@ function PostsList() {
     setSelectedPost(post);
   }, []);
 
+  const handleRetry = useCallback(() => {
+    dispatch(fetchPosts({ category: currentCategory }));
+  }, [dispatch, currentCategory]);
+
   if (error) {
     return (
       <ErrorContainer>
         <h3>Error</h3>
         <p>{error}</p>
+        <RetryButton onClick={handleRetry}>Try again</RetryButton>
       </ErrorContainer>
     );
   }
