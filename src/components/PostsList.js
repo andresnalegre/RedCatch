@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback, useMemo, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux';
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchPosts, selectSearchTerm } from '../features/posts/postsSlice';
+import { fetchPosts, selectSearchTerm, selectErrorType } from '../features/posts/postsSlice';
 import PostDetail from '../components/PostDetail';
 
 const GlobalStyle = createGlobalStyle`
@@ -76,16 +76,33 @@ const PostImage = styled.img`
 `;
 
 const ErrorContainer = styled.div`
-  background: #ffebee;
-  color: #c62828;
+  background: ${props => props.rateLimit ? '#fff8e1' : '#ffebee'};
+  color: ${props => props.rateLimit ? '#e65100' : '#c62828'};
+  border: 1px solid ${props => props.rateLimit ? '#ffe082' : '#ef9a9a'};
   padding: 1.5rem;
   border-radius: 8px;
   margin: 1rem 0;
   text-align: center;
 `;
 
+const ErrorIcon = styled.div`
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+`;
+
+const ErrorTitle = styled.h3`
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+`;
+
+const ErrorMessage = styled.p`
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  opacity: 0.85;
+`;
+
 const RetryButton = styled.button`
-  margin-top: 1rem;
   padding: 0.6rem 1.5rem;
   background: #ff4500;
   color: white;
@@ -119,6 +136,7 @@ function PostsList() {
   const dispatch = useDispatch();
   const { items, loading, error, currentCategory, after } = useSelector(state => state.posts);
   const searchTerm = useSelector(selectSearchTerm);
+  const errorType = useSelector(selectErrorType);
   const observerTarget = useRef(null);
   const [selectedPost, setSelectedPost] = useState(null);
 
@@ -172,10 +190,18 @@ function PostsList() {
   }, [dispatch, currentCategory]);
 
   if (error) {
+    const isRateLimit = errorType === 'rate_limit';
     return (
-      <ErrorContainer>
-        <h3>Error</h3>
-        <p>{error}</p>
+      <ErrorContainer rateLimit={isRateLimit}>
+        <ErrorIcon>{isRateLimit ? '⏱️' : '⚠️'}</ErrorIcon>
+        <ErrorTitle>
+          {isRateLimit ? 'Reddit API rate limit reached' : 'Failed to load posts'}
+        </ErrorTitle>
+        <ErrorMessage>
+          {isRateLimit
+            ? 'Too many requests were made to the Reddit API. Please wait a few seconds and try again.'
+            : 'Something went wrong while fetching posts. Please try again.'}
+        </ErrorMessage>
         <RetryButton onClick={handleRetry}>Try again</RetryButton>
       </ErrorContainer>
     );

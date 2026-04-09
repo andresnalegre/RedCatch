@@ -15,6 +15,7 @@ const initialState = {
   items: [],
   loading: false,
   error: null,
+  errorType: null,
   currentCategory: 'popular',
   after: null,
   hasMore: true,
@@ -63,7 +64,11 @@ export const fetchPosts = createAsyncThunk(
         hasMore: !!response.data.data.after && posts.length > 0
       };
     } catch (error) {
-      return rejectWithValue(`Failed to fetch posts from ${category}`);
+      const status = error.response?.status;
+      if (status === 429) {
+        return rejectWithValue({ message: 'Reddit API rate limit reached. Please wait a moment and try again.', type: 'rate_limit' });
+      }
+      return rejectWithValue({ message: `Failed to fetch posts from ${category}`, type: 'generic' });
     }
   }
 );
@@ -93,7 +98,11 @@ export const searchPosts = createAsyncThunk(
         searchTerm
       };
     } catch (error) {
-      return rejectWithValue('Failed to search posts');
+      const status = error.response?.status;
+      if (status === 429) {
+        return rejectWithValue({ message: 'Reddit API rate limit reached. Please wait a moment and try again.', type: 'rate_limit' });
+      }
+      return rejectWithValue({ message: 'Failed to search posts', type: 'generic' });
     }
   }
 );
@@ -107,6 +116,7 @@ const postsSlice = createSlice({
       state.items = [];
       state.after = null;
       state.error = null;
+      state.errorType = null;
       state.hasMore = true;
       state.loadingMore = false;
       state.searchTerm = '';
@@ -134,11 +144,13 @@ const postsSlice = createSlice({
           state.loadingMore = true;
         }
         state.error = null;
+        state.errorType = null;
       })
       .addCase(fetchPosts.fulfilled, (state, action) => {
         state.loading = false;
         state.loadingMore = false;
         state.error = null;
+        state.errorType = null;
         if (action.payload.posts.length > 0) {
           const newPosts = action.payload.posts.filter(
             newPost => !state.items.some(existingPost => existingPost.id === newPost.id)
@@ -157,19 +169,22 @@ const postsSlice = createSlice({
       .addCase(fetchPosts.rejected, (state, action) => {
         state.loading = false;
         state.loadingMore = false;
-        state.error = action.payload;
+        state.error = action.payload?.message || action.payload;
+        state.errorType = action.payload?.type || 'generic';
         state.hasMore = false;
       })
       .addCase(searchPosts.pending, (state) => {
         state.loading = true;
         state.isSearching = true;
         state.error = null;
+        state.errorType = null;
       })
       .addCase(searchPosts.fulfilled, (state, action) => {
         state.loading = false;
         state.isSearching = false;
         state.searchTerm = action.payload.searchTerm || '';
         state.error = null;
+        state.errorType = null;
         if (action.payload.posts.length > 0) {
           state.items = action.payload.posts;
           state.after = action.payload.after;
@@ -183,7 +198,8 @@ const postsSlice = createSlice({
       .addCase(searchPosts.rejected, (state, action) => {
         state.loading = false;
         state.isSearching = false;
-        state.error = action.payload;
+        state.error = action.payload?.message || action.payload;
+        state.errorType = action.payload?.type || 'generic';
         state.hasMore = false;
       });
   },
@@ -194,6 +210,7 @@ export const selectCurrentCategory = (state) => state.posts.currentCategory;
 export const selectLoading = (state) => state.posts.loading;
 export const selectLoadingMore = (state) => state.posts.loadingMore;
 export const selectError = (state) => state.posts.error;
+export const selectErrorType = (state) => state.posts.errorType;
 export const selectAfter = (state) => state.posts.after;
 export const selectHasMore = (state) => state.posts.hasMore;
 export const selectSearchTerm = (state) => state.posts.searchTerm;
