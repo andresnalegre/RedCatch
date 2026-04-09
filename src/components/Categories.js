@@ -9,13 +9,13 @@ const CategoryContainer = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
-  top: 80px;
+  top: 90px;
   height: auto;
   max-height: 420px;
 
   @media (max-width: 768px) {
     position: fixed;
-    top: 113px;
+    top: 148px;
     left: 0;
     right: 0;
     z-index: 998;
@@ -75,14 +75,14 @@ const HamburgerButton = styled.button`
     align-items: center;
     gap: 0.5rem;
     position: fixed;
-    top: 82px;
+    top: 115px;
     left: 0;
     right: 0;
     z-index: 999;
     background: white;
     border: none;
     border-bottom: 1px solid #edeff1;
-    padding: 0.6rem 1rem;
+    padding: 0.75rem 1rem;
     font-size: 0.95rem;
     font-weight: 600;
     color: #1a1a1b;
@@ -93,7 +93,7 @@ const HamburgerButton = styled.button`
 `;
 
 const HamburgerIcon = styled.span`
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 `;
 
 const ActiveLabel = styled.span`
