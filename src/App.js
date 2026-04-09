@@ -11,11 +11,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 const AppContainer = styled.div`
   min-height: 100vh;
   background-color: #f6f7f8;
-  padding-top: 80px;
+  padding-top: 64px;
   padding-bottom: 50px;
 
   @media (max-width: 768px) {
-    padding-top: 170px;
+    padding-top: 145px;
     padding-bottom: 50px;
   }
 `;

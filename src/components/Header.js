@@ -7,7 +7,7 @@ import RedcatchLogo from '../assets/Redcatch.png';
 
 const HeaderContainer = styled.header`
   background-color: #ffffff;
-  padding: 0.75rem 2rem;
+  padding: 0 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
@@ -17,69 +17,46 @@ const HeaderContainer = styled.header`
   left: 0;
   right: 0;
   z-index: 1000;
-  height: 80px;
-  transform: translateZ(0);
-  will-change: transform;
+  height: 64px;
 
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
     height: auto;
-    padding: 0.75rem 1rem;
+    padding: 0.6rem 1rem;
     gap: 0.5rem;
-    transform: translateZ(0);
-    will-change: transform;
   }
 `;
 
 const LogoContainer = styled.a`
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
   cursor: pointer;
-  transition: all 0.3s ease;
   text-decoration: none;
 
-  &:hover {
-    opacity: 0.8;
-    transform: scale(1.02);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
+  &:hover { opacity: 0.8; }
 `;
 
 const LogoImage = styled.img`
-  height: 100px;
+  height: 44px;
   width: auto;
   object-fit: contain;
-  transition: all 0.3s ease;
-
-  @media (max-width: 768px) {
-    height: 60px;
-  }
 `;
 
 const Logo = styled.h1`
   color: #FF4500;
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   font-weight: bold;
   margin: 0;
   font-family: Arial, sans-serif;
   user-select: none;
-  transition: all 0.3s ease;
-
-  @media (max-width: 768px) {
-    font-size: 1.8rem;
-  }
 `;
 
 const SearchContainer = styled.div`
   position: relative;
   width: 300px;
-  transition: all 0.3s ease;
 
   @media (max-width: 768px) {
     width: 100%;
@@ -92,13 +69,12 @@ const SearchInput = styled.input`
   border-radius: 4px;
   width: 100%;
   font-size: 1rem;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   &:focus {
     outline: none;
     border-color: #ff4500;
     box-shadow: 0 2px 4px rgba(255, 69, 0, 0.1);
-    transform: translateY(-1px);
   }
 
   &:disabled {
@@ -114,16 +90,8 @@ const SearchIcon = styled.span`
   transform: translateY(-50%);
   color: #666;
   cursor: pointer;
-  transition: all 0.3s ease;
 
-  &:hover {
-    color: #ff4500;
-    transform: translateY(-50%) scale(1.1);
-  }
-
-  &:active {
-    transform: translateY(-50%) scale(0.95);
-  }
+  &:hover { color: #ff4500; }
 `;
 
 const ErrorMessage = styled.div`
@@ -174,11 +142,8 @@ const Header = () => {
   const handleSearch = useCallback((e) => {
     const newSearchTerm = e.target.value;
     setSearchInput(newSearchTerm);
-
     if (newSearchTerm.trim().length === 0) {
-      if (debouncedSearchRef.current) {
-        debouncedSearchRef.current.cancel();
-      }
+      if (debouncedSearchRef.current) debouncedSearchRef.current.cancel();
       performSearch('');
     } else {
       debouncedSearchRef.current(newSearchTerm);
@@ -188,9 +153,7 @@ const Header = () => {
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (debouncedSearchRef.current) {
-        debouncedSearchRef.current.cancel();
-      }
+      if (debouncedSearchRef.current) debouncedSearchRef.current.cancel();
       performSearch(searchInput);
     }
   }, [performSearch, searchInput]);
