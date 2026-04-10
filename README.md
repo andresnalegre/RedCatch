@@ -1,9 +1,9 @@
 <div align="center">
-  <img src="public/redcatch-192.png" alt="RedCatch" width="160" />
+  <img src="src/assets/Redcatch.png" alt="RedCatch" width="160" />
 
   # RedCatch
 
-  A modern Reddit content aggregator with category filtering and search.
+  Catch the hottest Reddit posts on the web.
 
   ![React](https://img.shields.io/badge/React-18-blue?logo=react)
   ![Redux](https://img.shields.io/badge/Redux_Toolkit-2-764ABC?logo=redux&logoColor=white)
@@ -17,9 +17,7 @@
 
 ## About
 
-**RedCatch** is a Reddit content aggregator that lets you browse posts by category and search across subreddits — all from the browser, with no account required.
-
-It consumes the Reddit JSON API directly, with infinite scroll, debounced search, and post detail with comments.
+**RedCatch** grabs fresh content from Reddit and delivers it organized by category and across different subreddits, all directly in the browser. It consumes the Reddit JSON API directly, so no account is required.
 
 ## Features
 
@@ -27,37 +25,6 @@ It consumes the Reddit JSON API directly, with infinite scroll, debounced search
 - Debounced search within the current category
 - Infinite scroll with automatic pagination
 - Post detail modal with nested comments
-- Fixed footer always visible
-
----
-
-## Run locally
-
-### Requirements
-
-- Node.js 18+
-
-### Setup
-
-```bash
-git clone https://github.com/andresnalegre/RedCatch
-cd RedCatch
-npm install
-npm start
-```
-
----
-
-## Tech stack
-
-| Layer      | Technology        |
-|------------|-------------------|
-| UI         | React 18          |
-| State      | Redux Toolkit 2   |
-| Styling    | Styled Components |
-| Animation  | Framer Motion     |
-| HTTP       | Axios             |
-| API        | Reddit JSON API   |
 
 ---
 
