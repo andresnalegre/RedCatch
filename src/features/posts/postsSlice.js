@@ -27,19 +27,38 @@ const initialState = {
   commentsError: null
 };
 
-const PROXY = 'https://corsproxy.io/?url=';
+const PROXIES = [
+  (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url) => `https://thingproxy.freeboard.io/fetch/${url}`,
+];
 
-const proxyUrl = (url) => {
-  const isLocal =
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1';
-  return isLocal ? url : `${PROXY}${encodeURIComponent(url)}`;
+const isLocal = () =>
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1';
+
+const fetchWithFallback = async (rawUrl, options = {}) => {
+  if (isLocal()) {
+    const response = await axios.get(rawUrl, { timeout: 10000, ...options });
+    return response;
+  }
+
+  let lastError;
+  for (const buildProxy of PROXIES) {
+    try {
+      const proxied = buildProxy(rawUrl);
+      const response = await axios.get(proxied, { timeout: 10000, ...options });
+      return response;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError;
 };
 
-const buildUrl = (category, after = null) => {
+const buildRawUrl = (category, after = null) => {
   const subreddit = subredditMap[category] || category;
-  const base = `https://www.reddit.com/r/${subreddit}.json${after ? `?after=${after}` : ''}`;
-  return proxyUrl(base);
+  return `https://www.reddit.com/r/${subreddit}.json${after ? `?after=${after}` : ''}`;
 };
 
 const processRedditResponse = (data) => {
@@ -68,8 +87,8 @@ export const fetchPosts = createAsyncThunk(
   'posts/fetchPosts',
   async ({ category = 'popular', after = null }, { rejectWithValue }) => {
     try {
-      const url = buildUrl(category, after);
-      const response = await axios.get(url, { timeout: 10000 });
+      const rawUrl = buildRawUrl(category, after);
+      const response = await fetchWithFallback(rawUrl);
       const posts = processRedditResponse(response.data);
       return {
         posts,
@@ -108,8 +127,7 @@ export const searchPosts = createAsyncThunk(
         rawUrl = `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchTerm)}&restrict_sr=on&sort=relevance&limit=25`;
       }
 
-      const url = proxyUrl(rawUrl);
-      const response = await axios.get(url, { timeout: 10000 });
+      const response = await fetchWithFallback(rawUrl);
       const posts = processRedditResponse(response.data);
       return {
         posts,
@@ -138,8 +156,7 @@ export const fetchComments = createAsyncThunk(
   async ({ postId }, { rejectWithValue }) => {
     try {
       const rawUrl = `https://www.reddit.com/comments/${postId}.json`;
-      const url = proxyUrl(rawUrl);
-      const response = await axios.get(url, { timeout: 10000 });
+      const response = await fetchWithFallback(rawUrl);
       const comments = response.data[1].data.children
         .filter(child => child.kind === 't1')
         .map(child => child.data);
