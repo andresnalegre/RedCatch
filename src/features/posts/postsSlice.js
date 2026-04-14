@@ -21,7 +21,10 @@ const initialState = {
   hasMore: true,
   loadingMore: false,
   searchTerm: '',
-  isSearching: false
+  isSearching: false,
+  comments: [],
+  commentsLoading: false,
+  commentsError: null
 };
 
 const PROXY = 'https://corsproxy.io/?url=';
@@ -130,6 +133,33 @@ export const searchPosts = createAsyncThunk(
   }
 );
 
+export const fetchComments = createAsyncThunk(
+  'posts/fetchComments',
+  async ({ postId }, { rejectWithValue }) => {
+    try {
+      const rawUrl = `https://www.reddit.com/comments/${postId}.json`;
+      const url = proxyUrl(rawUrl);
+      const response = await axios.get(url, { timeout: 10000 });
+      const comments = response.data[1].data.children
+        .filter(child => child.kind === 't1')
+        .map(child => child.data);
+      return comments;
+    } catch (error) {
+      const status = error.response?.status;
+      if (status === 429) {
+        return rejectWithValue({
+          message: 'Reddit API rate limit reached. Please wait a moment and try again.',
+          type: 'rate_limit'
+        });
+      }
+      return rejectWithValue({
+        message: 'Failed to load comments. Please try again later.',
+        type: 'generic'
+      });
+    }
+  }
+);
+
 const postsSlice = createSlice({
   name: 'posts',
   initialState,
@@ -156,6 +186,11 @@ const postsSlice = createSlice({
     clearSearch: (state) => {
       state.searchTerm = '';
       state.isSearching = false;
+    },
+    clearComments: (state) => {
+      state.comments = [];
+      state.commentsLoading = false;
+      state.commentsError = null;
     }
   },
   extraReducers: (builder) => {
@@ -224,6 +259,21 @@ const postsSlice = createSlice({
         state.error = action.payload?.message || action.payload;
         state.errorType = action.payload?.type || 'generic';
         state.hasMore = false;
+      })
+      .addCase(fetchComments.pending, (state) => {
+        state.commentsLoading = true;
+        state.commentsError = null;
+        state.comments = [];
+      })
+      .addCase(fetchComments.fulfilled, (state, action) => {
+        state.commentsLoading = false;
+        state.commentsError = null;
+        state.comments = action.payload;
+      })
+      .addCase(fetchComments.rejected, (state, action) => {
+        state.commentsLoading = false;
+        state.commentsError = action.payload?.message || 'Failed to load comments.';
+        state.comments = [];
       });
   },
 });
@@ -238,6 +288,9 @@ export const selectAfter = (state) => state.posts.after;
 export const selectHasMore = (state) => state.posts.hasMore;
 export const selectSearchTerm = (state) => state.posts.searchTerm;
 export const selectIsSearching = (state) => state.posts.isSearching;
+export const selectComments = (state) => state.posts.comments;
+export const selectCommentsLoading = (state) => state.posts.commentsLoading;
+export const selectCommentsError = (state) => state.posts.commentsError;
 
-export const { setCurrentCategory, clearPosts, clearSearch } = postsSlice.actions;
+export const { setCurrentCategory, clearPosts, clearSearch, clearComments } = postsSlice.actions;
 export default postsSlice.reducer;

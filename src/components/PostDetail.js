@@ -1,7 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import styled from 'styled-components';
-import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import styled, { keyframes } from 'styled-components';
+import { motion } from 'framer-motion';
+import {
+  fetchComments,
+  clearComments,
+  selectComments,
+  selectCommentsLoading,
+  selectCommentsError
+} from '../features/posts/postsSlice';
 
 const Overlay = styled(motion.div)`
   position: fixed;
@@ -37,17 +44,14 @@ const DetailContainer = styled(motion.div)`
   &::-webkit-scrollbar {
     width: 8px;
   }
-
   &::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
   }
-
   &::-webkit-scrollbar-thumb {
     background: #888;
     border-radius: 4px;
   }
-
   &::-webkit-scrollbar-thumb:hover {
     background: #555;
   }
@@ -91,7 +95,7 @@ const CloseButton = styled.button`
     right: 12px;
     float: none;
     background: white;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   }
 `;
 
@@ -210,11 +214,29 @@ const CommentBody = styled.div`
   word-break: break-word;
 `;
 
-const LoadingSpinner = styled.div`
-  display: flex;
-  justify-content: center;
-  padding: 30px;
-  color: #787c7e;
+const shimmer = keyframes`
+  0% { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+`;
+
+const SkeletonBase = styled.div`
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 600px 100%;
+  animation: ${shimmer} 1.4s infinite linear;
+  border-radius: 4px;
+`;
+
+const SkeletonLine = styled(SkeletonBase)`
+  height: ${props => props.height || '14px'};
+  width: ${props => props.width || '100%'};
+  margin-bottom: ${props => props.mb || '8px'};
+`;
+
+const SkeletonComment = styled.div`
+  padding: 12px;
+  margin: 8px 0;
+  border-left: 3px solid #f0f0f0;
+  border-radius: 6px;
 `;
 
 const ErrorMessage = styled.div`
@@ -233,49 +255,49 @@ const isValidThumbnail = (thumbnail) => {
   return thumbnail.startsWith('http');
 };
 
+const CommentSkeleton = () => (
+  <>
+    {[1, 2, 3, 4, 5].map(i => (
+      <SkeletonComment key={i}>
+        <SkeletonLine height="12px" width="120px" mb="10px" />
+        <SkeletonLine width="100%" />
+        <SkeletonLine width="80%" />
+      </SkeletonComment>
+    ))}
+  </>
+);
+
+const renderComment = (comment, depth = 0) => {
+  if (!comment || !comment.body) return null;
+  return (
+    <div key={comment.id}>
+      <Comment depth={depth}>
+        <CommentHeader>
+          <strong>u/{comment.author}</strong>
+          <span>⬆️ {new Intl.NumberFormat().format(comment.score)}</span>
+        </CommentHeader>
+        <CommentBody>{comment.body}</CommentBody>
+      </Comment>
+      {comment.replies &&
+        comment.replies.data?.children
+          .filter(child => child.kind === 't1')
+          .map(child => renderComment(child.data, depth + 1))}
+    </div>
+  );
+};
+
 function PostDetail({ post, onClose }) {
-  const [comments, setComments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const comments = useSelector(selectComments);
+  const commentsLoading = useSelector(selectCommentsLoading);
+  const commentsError = useSelector(selectCommentsError);
 
   useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          `https://www.reddit.com/comments/${post.id}.json`
-        );
-        const fetchedComments = response.data[1].data.children
-          .filter(child => child.kind === 't1')
-          .map(child => child.data);
-        setComments(fetchedComments);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load comments. Please try again later.');
-        setLoading(false);
-      }
+    dispatch(fetchComments({ postId: post.id }));
+    return () => {
+      dispatch(clearComments());
     };
-    fetchComments();
-  }, [post.id]);
-
-  const renderComment = (comment, depth = 0) => {
-    if (!comment || !comment.body) return null;
-    return (
-      <div key={comment.id}>
-        <Comment depth={depth}>
-          <CommentHeader>
-            <strong>u/{comment.author}</strong>
-            <span>⬆️ {new Intl.NumberFormat().format(comment.score)}</span>
-          </CommentHeader>
-          <CommentBody>{comment.body}</CommentBody>
-        </Comment>
-        {comment.replies &&
-          comment.replies.data?.children
-            .filter(child => child.kind === 't1')
-            .map(child => renderComment(child.data, depth + 1))}
-      </div>
-    );
-  };
+  }, [post.id, dispatch]);
 
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) onClose();
@@ -329,12 +351,12 @@ function PostDetail({ post, onClose }) {
 
         <CommentsSection>
           <h3>Comments</h3>
-          {loading && <LoadingSpinner>Loading comments...</LoadingSpinner>}
-          {error && <ErrorMessage>{error}</ErrorMessage>}
-          {!loading && !error && comments.length === 0 && (
+          {commentsLoading && <CommentSkeleton />}
+          {commentsError && <ErrorMessage>{commentsError}</ErrorMessage>}
+          {!commentsLoading && !commentsError && comments.length === 0 && (
             <div>No comments yet</div>
           )}
-          {!loading && !error && comments.map(comment => renderComment(comment))}
+          {!commentsLoading && !commentsError && comments.map(comment => renderComment(comment))}
         </CommentsSection>
       </DetailContainer>
     </Overlay>

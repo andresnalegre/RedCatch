@@ -11,6 +11,37 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
+const shimmer = keyframes`
+  0% { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+`;
+
+const SkeletonBase = styled.div`
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 600px 100%;
+  animation: ${shimmer} 1.4s infinite linear;
+  border-radius: 4px;
+`;
+
+const SkeletonLine = styled(SkeletonBase)`
+  height: ${props => props.height || '14px'};
+  width: ${props => props.width || '100%'};
+  margin-bottom: ${props => props.mb || '8px'};
+`;
+
+const SkeletonCard = styled.div`
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const SkeletonMeta = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+`;
+
 const spin = keyframes`
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -132,6 +163,18 @@ const NoPostsMessage = styled.div`
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
+const PostCardSkeleton = () => (
+  <SkeletonCard>
+    <SkeletonLine height="18px" width="85%" mb="12px" />
+    <SkeletonLine height="18px" width="60%" mb="16px" />
+    <SkeletonMeta>
+      <SkeletonLine height="12px" width="80px" mb="0" />
+      <SkeletonLine height="12px" width="80px" mb="0" />
+      <SkeletonLine height="12px" width="80px" mb="0" />
+    </SkeletonMeta>
+  </SkeletonCard>
+);
+
 function PostsList() {
   const dispatch = useDispatch();
   const { items, loading, error, currentCategory, after } = useSelector(state => state.posts);
@@ -209,7 +252,16 @@ function PostsList() {
   }
 
   if (loading && items.length === 0) {
-    return <Spinner />;
+    return (
+      <PostsContainer>
+        <PostsHeader>
+          <h2>{getTitle()}</h2>
+        </PostsHeader>
+        {[1, 2, 3, 4, 5].map(i => (
+          <PostCardSkeleton key={i} />
+        ))}
+      </PostsContainer>
+    );
   }
 
   if (filteredPosts.length === 0 && !loading) {
