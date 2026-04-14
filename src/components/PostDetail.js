@@ -226,6 +226,13 @@ const ErrorMessage = styled.div`
   margin: 12px 0;
 `;
 
+const isValidThumbnail = (thumbnail) => {
+  if (!thumbnail) return false;
+  const invalid = ['self', 'default', 'nsfw', 'spoiler', ''];
+  if (invalid.includes(thumbnail)) return false;
+  return thumbnail.startsWith('http');
+};
+
 function PostDetail({ post, onClose }) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -311,8 +318,13 @@ function PostDetail({ post, onClose }) {
           </PostLink>
         )}
 
-        {post.thumbnail && post.thumbnail !== 'self' && (
-          <PostImage src={post.thumbnail} alt="" loading="lazy" />
+        {isValidThumbnail(post.thumbnail) && (
+          <PostImage
+            src={post.thumbnail}
+            alt=""
+            loading="lazy"
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
         )}
 
         <CommentsSection>

@@ -49,7 +49,7 @@ const ErrorBanner = styled(motion.div)`
 function App() {
   const dispatch = useDispatch();
   const [error, setError] = useState(null);
-  const { currentCategory, error: stateError } = useSelector(state => state.posts);
+  const { currentCategory } = useSelector(state => state.posts);
 
   useEffect(() => {
     const load = async () => {
@@ -62,13 +62,6 @@ function App() {
     };
     load();
   }, [currentCategory, dispatch]);
-
-  useEffect(() => {
-    if (stateError) {
-      setError(stateError);
-      setTimeout(() => setError(null), 5000);
-    }
-  }, [stateError]);
 
   return (
     <AppContainer>

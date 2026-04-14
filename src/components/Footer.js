@@ -21,15 +21,6 @@ const FooterContainer = styled.footer`
   }
 `;
 
-const FooterLink = styled.a`
-  color: #ff4500;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
 function Footer() {
   const [offset, setOffset] = useState(0);
   const baseHeightRef = useRef(null);

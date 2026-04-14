@@ -24,9 +24,19 @@ const initialState = {
   isSearching: false
 };
 
+const PROXY = 'https://corsproxy.io/?url=';
+
+const proxyUrl = (url) => {
+  const isLocal =
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1';
+  return isLocal ? url : `${PROXY}${encodeURIComponent(url)}`;
+};
+
 const buildUrl = (category, after = null) => {
   const subreddit = subredditMap[category] || category;
-  return `https://www.reddit.com/r/${subreddit}.json${after ? `?after=${after}` : ''}`;
+  const base = `https://www.reddit.com/r/${subreddit}.json${after ? `?after=${after}` : ''}`;
+  return proxyUrl(base);
 };
 
 const processRedditResponse = (data) => {
@@ -66,9 +76,15 @@ export const fetchPosts = createAsyncThunk(
     } catch (error) {
       const status = error.response?.status;
       if (status === 429) {
-        return rejectWithValue({ message: 'Reddit API rate limit reached. Please wait a moment and try again.', type: 'rate_limit' });
+        return rejectWithValue({
+          message: 'Reddit API rate limit reached. Please wait a moment and try again.',
+          type: 'rate_limit'
+        });
       }
-      return rejectWithValue({ message: `Failed to fetch posts from ${category}`, type: 'generic' });
+      return rejectWithValue({
+        message: `Failed to fetch posts from ${category}`,
+        type: 'generic'
+      });
     }
   }
 );
@@ -82,13 +98,14 @@ export const searchPosts = createAsyncThunk(
       }
 
       const subreddit = subredditMap[category] || category;
-      let url;
+      let rawUrl;
       if (category === 'popular' || category === 'all') {
-        url = `https://www.reddit.com/search.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=25`;
+        rawUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=25`;
       } else {
-        url = `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchTerm)}&restrict_sr=on&sort=relevance&limit=25`;
+        rawUrl = `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchTerm)}&restrict_sr=on&sort=relevance&limit=25`;
       }
 
+      const url = proxyUrl(rawUrl);
       const response = await axios.get(url, { timeout: 10000 });
       const posts = processRedditResponse(response.data);
       return {
@@ -100,9 +117,15 @@ export const searchPosts = createAsyncThunk(
     } catch (error) {
       const status = error.response?.status;
       if (status === 429) {
-        return rejectWithValue({ message: 'Reddit API rate limit reached. Please wait a moment and try again.', type: 'rate_limit' });
+        return rejectWithValue({
+          message: 'Reddit API rate limit reached. Please wait a moment and try again.',
+          type: 'rate_limit'
+        });
       }
-      return rejectWithValue({ message: 'Failed to search posts', type: 'generic' });
+      return rejectWithValue({
+        message: 'Failed to search posts',
+        type: 'generic'
+      });
     }
   }
 );

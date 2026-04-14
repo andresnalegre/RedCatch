@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback, useMemo, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux';
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchPosts, selectSearchTerm, selectErrorType } from '../features/posts/postsSlice';
+import { fetchPosts, selectSearchTerm, selectErrorType, selectIsSearching } from '../features/posts/postsSlice';
 import PostDetail from '../components/PostDetail';
 
 const GlobalStyle = createGlobalStyle`
@@ -137,6 +137,7 @@ function PostsList() {
   const { items, loading, error, currentCategory, after } = useSelector(state => state.posts);
   const searchTerm = useSelector(selectSearchTerm);
   const errorType = useSelector(selectErrorType);
+  const isSearching = useSelector(selectIsSearching);
   const observerTarget = useRef(null);
   const [selectedPost, setSelectedPost] = useState(null);
 
@@ -152,10 +153,10 @@ function PostsList() {
   };
 
   const loadMorePosts = useCallback(() => {
-    if (!loading && after) {
+    if (!loading && after && !searchTerm && !isSearching) {
       dispatch(fetchPosts({ category: currentCategory, after }));
     }
-  }, [loading, after, currentCategory, dispatch]);
+  }, [loading, after, currentCategory, dispatch, searchTerm, isSearching]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -244,7 +245,12 @@ function PostsList() {
                 <MetadataItem>⬆️ {new Intl.NumberFormat().format(post.score)} points</MetadataItem>
                 <MetadataItem>💬 {new Intl.NumberFormat().format(post.num_comments)} comments</MetadataItem>
               </PostMetadata>
-              {post.thumbnail && post.thumbnail !== 'self' && (
+              {post.thumbnail &&
+                post.thumbnail !== 'self' &&
+                post.thumbnail !== 'default' &&
+                post.thumbnail !== 'nsfw' &&
+                post.thumbnail !== 'spoiler' &&
+                post.thumbnail.startsWith('http') && (
                 <PostImage
                   src={post.thumbnail}
                   alt=""
