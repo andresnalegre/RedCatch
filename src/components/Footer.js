@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 const FooterContainer = styled.footer`
@@ -7,47 +7,20 @@ const FooterContainer = styled.footer`
   padding: 0.6rem 2rem;
   text-align: center;
   color: #787c7e;
-  font-size: 0.85rem;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 999;
-  transform: translateY(${props => props.offset}px);
-  transition: transform 0.15s ease;
+  font-size: 0.82rem;
+  width: 100%;
+  margin-top: 2rem;
 
   @media (max-width: 768px) {
-    transition: none;
+    padding: 0.5rem 1rem;
+    font-size: 0.72rem;
+    margin-top: 1rem;
   }
 `;
 
 function Footer() {
-  const [offset, setOffset] = useState(0);
-  const baseHeightRef = useRef(null);
-
-  useEffect(() => {
-    const isMobile = window.innerWidth <= 768;
-    if (!isMobile) return;
-
-    baseHeightRef.current = window.innerHeight;
-
-    const handleResize = () => {
-      const current = window.innerHeight;
-      const base = baseHeightRef.current;
-      if (current > base) {
-        setOffset(current - base);
-      } else {
-        baseHeightRef.current = current;
-        setOffset(0);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   return (
-    <FooterContainer offset={offset}>
+    <FooterContainer>
       © {new Date().getFullYear()} RedCatch. All rights reserved.
     </FooterContainer>
   );

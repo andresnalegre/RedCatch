@@ -5,32 +5,38 @@ import { setCurrentCategory, clearSearch } from '../features/posts/postsSlice';
 
 const CategoryContainer = styled.div`
   background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  border: 1px solid #f0f0f0;
   position: sticky;
-  top: 90px;
-  height: auto;
-  max-height: 420px;
+  top: 84px;
+  height: fit-content;
 
   @media (max-width: 768px) {
     position: fixed;
-    top: 163px;
+    top: 100px;
     left: 0;
     right: 0;
     z-index: 998;
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 12px 12px;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
     display: ${props => props.open ? 'block' : 'none'};
     max-height: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   }
 `;
 
-const CategoryTitle = styled.h2`
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-  color: #1a1a1b;
-  font-weight: 600;
+const CategoryTitle = styled.p`
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aaa;
+  padding: 4px 8px 10px;
+  border-bottom: 1px solid #f4f4f4;
+  margin-bottom: 6px;
 
   @media (max-width: 768px) {
     display: none;
@@ -38,33 +44,41 @@ const CategoryTitle = styled.h2`
 `;
 
 const CategoryList = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 `;
 
 const CategoryButton = styled.button`
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
-  padding: 0.8rem 1rem;
-  border: none;
-  border-radius: 4px;
-  background: ${props => props.active ? '#ff4500' : '#f6f7f8'};
-  color: ${props => props.active ? 'white' : '#1a1a1b'};
-  font-size: 0.95rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid ${props => props.active ? 'rgba(255,69,0,0.2)' : 'transparent'};
+  border-radius: 8px;
+  background: ${props => props.active ? 'rgba(255, 69, 0, 0.08)' : 'transparent'};
+  color: ${props => props.active ? '#ff4500' : '#444'};
+  font-size: 0.9rem;
   text-align: left;
-  transition: all 0.2s ease;
   cursor: pointer;
   font-weight: ${props => props.active ? '600' : '400'};
+  transition: all 0.15s ease;
 
   &:hover {
-    background: ${props => props.active ? '#ff4500' : '#e1e2e3'};
-    transform: translateY(-1px);
+    background: ${props => props.active ? 'rgba(255, 69, 0, 0.08)' : '#f6f7f8'};
+    color: ${props => props.active ? '#ff4500' : '#111'};
   }
+`;
 
-  &:active {
-    transform: translateY(0);
-  }
+const Dot = styled.span`
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ff4500;
+  flex-shrink: 0;
+  opacity: ${props => props.visible ? 1 : 0};
+  transition: opacity 0.15s;
 `;
 
 const HamburgerButton = styled.button`
@@ -73,22 +87,22 @@ const HamburgerButton = styled.button`
   @media (max-width: 768px) {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     position: fixed;
-    top: 130px;
+    top: 60px;
     left: 0;
     right: 0;
     z-index: 999;
-    background: white;
+    background: #ffffff;
     border: none;
-    border-bottom: 1px solid #edeff1;
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #1a1a1b;
+    border-bottom: 1px solid #f0f0f0;
+    border-top: 1px solid #f0f0f0;
+    padding: 0.6rem 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #444;
     cursor: pointer;
     width: 100%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   }
 `;
 
@@ -158,6 +172,7 @@ function Categories() {
               active={currentCategory === category.id}
               onClick={() => handleCategoryClick(category.id)}
             >
+              <Dot visible={currentCategory === category.id} />
               {category.name}
             </CategoryButton>
           ))}

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,10 +17,10 @@ const shimmer = keyframes`
 `;
 
 const SkeletonBase = styled.div`
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
   background-size: 600px 100%;
   animation: ${shimmer} 1.4s infinite linear;
-  border-radius: 4px;
+  border-radius: 6px;
 `;
 
 const SkeletonLine = styled(SkeletonBase)`
@@ -31,15 +31,16 @@ const SkeletonLine = styled(SkeletonBase)`
 
 const SkeletonCard = styled.div`
   background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 `;
 
 const SkeletonMeta = styled.div`
   display: flex;
   gap: 1rem;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
 `;
 
 const spin = keyframes`
@@ -48,46 +49,76 @@ const spin = keyframes`
 `;
 
 const Spinner = styled.div`
-  width: 36px;
-  height: 36px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #ff4500;
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid #f0f0f0;
+  border-top: 2.5px solid #ff4500;
   border-radius: 50%;
-  animation: ${spin} 0.8s linear infinite;
-  margin: 2rem auto;
+  animation: ${spin} 0.75s linear infinite;
+  margin: 0;
+`;
+
+const LoadMoreButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 4px;
+  background: #ffffff;
+  border: 1px solid #efefef;
+  border-radius: 12px;
+  color: #555;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+
+  &:hover {
+    border-color: rgba(255,69,0,0.25);
+    color: #ff4500;
+    box-shadow: 0 4px 12px rgba(255,69,0,0.08);
+  }
 `;
 
 const PostsContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 10px;
 `;
 
 const PostCard = styled(motion.div)`
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #ffffff 0%, #fffaf9 100%);
+  padding: 1.25rem 1.5rem;
+  border-radius: 14px;
+  border: 1px solid #f0ece9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
   cursor: pointer;
-  transition: box-shadow 0.2s ease;
+  transition: all 0.22s ease;
 
   &:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 69, 0, 0.18);
+    box-shadow: 0 8px 24px rgba(255, 69, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #ffffff 0%, #fff5f2 100%);
   }
 `;
 
 const PostTitle = styled.h3`
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
   color: #1a1a1b;
-  font-size: 1.1rem;
-  line-height: 1.4;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
 `;
 
 const PostMetadata = styled.div`
   display: flex;
-  gap: 1rem;
-  color: #787c7e;
-  font-size: 0.9rem;
+  gap: 0;
+  color: #999;
+  font-size: 0.82rem;
   flex-wrap: wrap;
   align-items: center;
 `;
@@ -95,82 +126,94 @@ const PostMetadata = styled.div`
 const MetadataItem = styled.span`
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 3px;
+
+  &:not(:last-child)::after {
+    content: '·';
+    margin: 0 7px;
+    color: #ddd;
+  }
 `;
 
 const PostImage = styled.img`
   max-width: 100%;
   height: auto;
-  border-radius: 4px;
-  margin-top: 1rem;
+  border-radius: 8px;
+  margin-top: 0.875rem;
   object-fit: cover;
+  border: 1px solid #f0f0f0;
 `;
 
 const ErrorContainer = styled.div`
-  background: ${props => props.rateLimit ? '#fff8e1' : '#ffebee'};
-  color: ${props => props.rateLimit ? '#e65100' : '#c62828'};
-  border: 1px solid ${props => props.rateLimit ? '#ffe082' : '#ef9a9a'};
-  padding: 1.5rem;
-  border-radius: 8px;
-  margin: 1rem 0;
+  background: ${props => props.rateLimit ? '#fffbeb' : '#fff5f5'};
+  color: ${props => props.rateLimit ? '#b45309' : '#c0392b'};
+  border: 1px solid ${props => props.rateLimit ? '#fde68a' : '#fca5a5'};
+  padding: 2rem;
+  border-radius: 12px;
   text-align: center;
 `;
 
 const ErrorIcon = styled.div`
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.75rem;
+  margin-bottom: 0.75rem;
 `;
 
 const ErrorTitle = styled.h3`
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.4rem 0;
   font-size: 1rem;
   font-weight: 600;
 `;
 
 const ErrorMessage = styled.p`
-  margin: 0 0 1rem 0;
-  font-size: 0.9rem;
-  opacity: 0.85;
+  margin: 0 0 1.25rem 0;
+  font-size: 0.875rem;
+  opacity: 0.8;
 `;
 
 const RetryButton = styled.button`
-  padding: 0.6rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   background: #ff4500;
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 0.95rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.2s ease;
 
-  &:hover {
-    background: #cc3700;
-  }
+  &:hover { background: #e03d00; }
 `;
 
 const PostsHeader = styled.div`
-  width: 100%;
-  padding: 1rem 0;
-  margin-bottom: 1rem;
+  padding: 4px 0 8px;
+`;
+
+const SectionTitle = styled.h2`
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aaa;
 `;
 
 const NoPostsMessage = styled.div`
   text-align: center;
-  padding: 2rem;
-  color: #666;
+  padding: 3rem 2rem;
+  color: #999;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  font-size: 0.9rem;
 `;
 
 const PostCardSkeleton = () => (
   <SkeletonCard>
-    <SkeletonLine height="18px" width="85%" mb="12px" />
-    <SkeletonLine height="18px" width="60%" mb="16px" />
+    <SkeletonLine height="16px" width="82%" mb="10px" />
+    <SkeletonLine height="16px" width="58%" mb="16px" />
     <SkeletonMeta>
-      <SkeletonLine height="12px" width="80px" mb="0" />
-      <SkeletonLine height="12px" width="80px" mb="0" />
-      <SkeletonLine height="12px" width="80px" mb="0" />
+      <SkeletonLine height="11px" width="75px" mb="0" />
+      <SkeletonLine height="11px" width="75px" mb="0" />
+      <SkeletonLine height="11px" width="75px" mb="0" />
     </SkeletonMeta>
   </SkeletonCard>
 );
@@ -181,42 +224,20 @@ function PostsList() {
   const searchTerm = useSelector(selectSearchTerm);
   const errorType = useSelector(selectErrorType);
   const isSearching = useSelector(selectIsSearching);
-  const observerTarget = useRef(null);
   const [selectedPost, setSelectedPost] = useState(null);
 
   const getTitle = () => {
     switch (currentCategory) {
-      case 'popular':
-        return 'Popular Posts';
-      case 'all':
-        return 'All Posts';
-      default:
-        return `${currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)} Posts`;
+      case 'popular': return 'Popular';
+      case 'all':     return 'All';
+      default:        return currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1);
     }
   };
 
-  const loadMorePosts = useCallback(() => {
-    if (!loading && after && !searchTerm && !isSearching) {
+  const handleLoadMore = useCallback(() => {
+    if (!loading && after && !searchTerm && !isSearching)
       dispatch(fetchPosts({ category: currentCategory, after }));
-    }
   }, [loading, after, currentCategory, dispatch, searchTerm, isSearching]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && !loading) {
-          loadMorePosts();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => observer.disconnect();
-  }, [loadMorePosts, loading]);
 
   const filteredPosts = useMemo(() => {
     if (!searchTerm) return items;
@@ -225,25 +246,18 @@ function PostsList() {
     );
   }, [items, searchTerm]);
 
-  const handlePostClick = useCallback((post) => {
-    setSelectedPost(post);
-  }, []);
-
-  const handleRetry = useCallback(() => {
-    dispatch(fetchPosts({ category: currentCategory }));
-  }, [dispatch, currentCategory]);
+  const handlePostClick = useCallback((post) => setSelectedPost(post), []);
+  const handleRetry = useCallback(() => dispatch(fetchPosts({ category: currentCategory })), [dispatch, currentCategory]);
 
   if (error) {
     const isRateLimit = errorType === 'rate_limit';
     return (
       <ErrorContainer rateLimit={isRateLimit}>
         <ErrorIcon>{isRateLimit ? '⏱️' : '⚠️'}</ErrorIcon>
-        <ErrorTitle>
-          {isRateLimit ? 'Reddit API rate limit reached' : 'Failed to load posts'}
-        </ErrorTitle>
+        <ErrorTitle>{isRateLimit ? 'Rate limit reached' : 'Failed to load posts'}</ErrorTitle>
         <ErrorMessage>
           {isRateLimit
-            ? 'Too many requests were made to the Reddit API. Please wait a few seconds and try again.'
+            ? 'Too many requests to the Reddit API. Wait a moment and try again.'
             : 'Something went wrong while fetching posts. Please try again.'}
         </ErrorMessage>
         <RetryButton onClick={handleRetry}>Try again</RetryButton>
@@ -254,12 +268,8 @@ function PostsList() {
   if (loading && items.length === 0) {
     return (
       <PostsContainer>
-        <PostsHeader>
-          <h2>{getTitle()}</h2>
-        </PostsHeader>
-        {[1, 2, 3, 4, 5].map(i => (
-          <PostCardSkeleton key={i} />
-        ))}
+        <PostsHeader><SectionTitle>{getTitle()}</SectionTitle></PostsHeader>
+        {[1, 2, 3, 4, 5].map(i => <PostCardSkeleton key={i} />)}
       </PostsContainer>
     );
   }
@@ -276,26 +286,23 @@ function PostsList() {
     <>
       <GlobalStyle modalOpen={!!selectedPost} />
       <PostsContainer>
-        <PostsHeader>
-          <h2>{getTitle()}</h2>
-        </PostsHeader>
+        <PostsHeader><SectionTitle>{getTitle()}</SectionTitle></PostsHeader>
         <AnimatePresence mode="wait">
           {filteredPosts.map((post) => (
             <PostCard
               key={post.id}
-              whileHover={{ scale: 1.01, translateY: -2 }}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
               onClick={() => handlePostClick(post)}
             >
               <PostTitle>{post.title}</PostTitle>
               <PostMetadata>
-                <MetadataItem>👤 u/{post.author}</MetadataItem>
-                <MetadataItem>📚 r/{post.subreddit}</MetadataItem>
-                <MetadataItem>⬆️ {new Intl.NumberFormat().format(post.score)} points</MetadataItem>
-                <MetadataItem>💬 {new Intl.NumberFormat().format(post.num_comments)} comments</MetadataItem>
+                <MetadataItem>u/{post.author}</MetadataItem>
+                <MetadataItem>r/{post.subreddit}</MetadataItem>
+                <MetadataItem>↑ {new Intl.NumberFormat().format(post.score)}</MetadataItem>
+                <MetadataItem>💬 {new Intl.NumberFormat().format(post.num_comments)}</MetadataItem>
               </PostMetadata>
               {post.thumbnail &&
                 post.thumbnail !== 'self' &&
@@ -313,9 +320,16 @@ function PostsList() {
             </PostCard>
           ))}
         </AnimatePresence>
-        <div ref={observerTarget}>
-          {loading && <Spinner />}
-        </div>
+        {loading && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '1.5rem 0' }}>
+            <Spinner />
+          </div>
+        )}
+        {after && !searchTerm && !loading && (
+          <LoadMoreButton onClick={handleLoadMore}>
+            Load more
+          </LoadMoreButton>
+        )}
 
         <AnimatePresence>
           {selectedPost && (

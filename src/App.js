@@ -11,12 +11,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 const AppContainer = styled.div`
   min-height: 100vh;
   background-color: #f6f7f8;
-  padding-top: 80px;
-  padding-bottom: 50px;
+  padding-top: 72px;
 
   @media (max-width: 768px) {
-    padding-top: 175px;
-    padding-bottom: 50px;
+    padding-top: 108px;
   }
 `;
 
@@ -35,15 +33,17 @@ const MainContent = styled.div`
 `;
 
 const ErrorBanner = styled(motion.div)`
-  background-color: #ff4444;
+  background-color: #ff4500;
   color: white;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   text-align: center;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 2000;
+  font-size: 0.875rem;
+  font-weight: 500;
 `;
 
 function App() {
@@ -68,10 +68,10 @@ function App() {
       <AnimatePresence>
         {error && (
           <ErrorBanner
-            initial={{ y: -100 }}
+            initial={{ y: -48 }}
             animate={{ y: 0 }}
-            exit={{ y: -100 }}
-            transition={{ type: 'spring', stiffness: 120 }}
+            exit={{ y: -48 }}
+            transition={{ type: 'spring', stiffness: 140, damping: 20 }}
           >
             {error}
           </ErrorBanner>

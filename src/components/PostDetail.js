@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled, { keyframes } from 'styled-components';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   fetchComments,
   clearComments,
@@ -10,206 +10,346 @@ import {
   selectCommentsError
 } from '../features/posts/postsSlice';
 
+// Parse Reddit markdown links [text](url) and detect image URLs
+const parseMarkdown = (text) => {
+  if (!text) return [];
+  const parts = [];
+  const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g; // eslint-disable-line no-useless-escape
+  let lastIndex = 0;
+  let match;
+  while ((match = linkRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'link', label: match[1], url: match[2] });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    parts.push({ type: 'text', content: text.slice(lastIndex) });
+  }
+  return parts.length > 0 ? parts : [{ type: 'text', content: text }];
+};
+
+const isImageUrl = (url) => /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url);
+
 const Overlay = styled(motion.div)`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  inset: 0;
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 1000;
   overflow-y: auto;
-  padding: 20px;
+  padding: 24px 20px;
   display: flex;
   justify-content: center;
 
   @media (max-width: 768px) {
     padding: 0;
     background: #f6f7f8;
+    backdrop-filter: none;
   }
 `;
 
 const DetailContainer = styled(motion.div)`
-  background: white;
+  background: #ffffff;
   width: 100%;
-  max-width: 800px;
-  margin: 60px auto;
-  border-radius: 12px;
-  padding: 30px;
+  max-width: 720px;
+  margin: 40px auto;
+  border-radius: 18px;
+  overflow: hidden;
   position: relative;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-  }
-  &::-webkit-scrollbar-thumb:hover {
-    background: #555;
-  }
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(0, 0, 0, 0.08);
 
   @media (max-width: 768px) {
     margin: 0;
     border-radius: 0;
-    padding: 16px;
     max-height: 100vh;
     min-height: 100vh;
     box-shadow: none;
   }
 `;
 
+const ModalHeader = styled.div`
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid #f4f4f4;
+  position: relative;
+  flex-shrink: 0;
+`;
+
 const CloseButton = styled.button`
-  position: sticky;
-  top: 0;
-  float: right;
+  position: absolute;
+  top: 18px;
+  right: 18px;
   background: #f6f7f8;
   border: none;
-  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 13px;
+  color: #999;
   cursor: pointer;
-  color: #666;
-  z-index: 2;
-  width: 36px;
-  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
 
   &:hover {
+    background: #fff0ec;
     color: #ff4500;
-    background: rgba(255, 69, 0, 0.1);
   }
+`;
+
+const SubredditTag = styled.span`
+  display: inline-block;
+  background: rgba(255, 69, 0, 0.08);
+  color: #ff4500;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+`;
+
+const PostTitle = styled.h2`
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #111;
+  margin: 0 40px 14px 0;
+  letter-spacing: -0.01em;
 
   @media (max-width: 768px) {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    float: none;
-    background: white;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    font-size: 1.1rem;
   }
 `;
 
-const PostHeader = styled.div`
-  margin-bottom: 20px;
-  padding-right: 40px;
-
-  h2 {
-    margin: 0 0 12px 0;
-    font-size: 1.4rem;
-    line-height: 1.4;
-    color: #1a1a1b;
-    font-weight: 600;
-
-    @media (max-width: 768px) {
-      font-size: 1.2rem;
-    }
-  }
-`;
-
-const PostMetadata = styled.div`
+const MetaRow = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  color: #787c7e;
-  font-size: 0.9rem;
   align-items: center;
+  gap: 0;
+  color: #aaa;
+  font-size: 0.8rem;
+`;
 
-  span {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+const MetaItem = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #999;
+
+  &:not(:last-child)::after {
+    content: '·';
+    margin: 0 8px;
+    color: #ddd;
+  }
+`;
+
+const MetaHighlight = styled.span`
+  color: #555;
+  font-weight: 500;
+`;
+
+const StatBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f6f7f8;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  color: #666;
+  font-weight: 500;
+`;
+
+const ScrollBody = styled.div`
+  overflow-y: auto;
+  flex: 1;
+  padding: 24px 28px;
+
+  &::-webkit-scrollbar { width: 5px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: #e8e8e8; border-radius: 3px; }
+  &::-webkit-scrollbar-thumb:hover { background: #ccc; }
+
+  @media (max-width: 768px) {
+    padding: 16px;
   }
 `;
 
 const PostContent = styled.div`
-  margin: 20px 0;
-  font-size: 1rem;
-  line-height: 1.7;
-  color: #1a1a1b;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: #444;
   white-space: pre-wrap;
   word-break: break-word;
+  margin-bottom: 20px;
 `;
 
 const PostLink = styled.a`
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: #ff4500;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   text-decoration: none;
-  padding: 12px;
-  margin: 16px 0;
-  background: #f8f9fa;
-  border-radius: 8px;
+  padding: 11px 14px;
+  margin-bottom: 20px;
+  background: rgba(255, 69, 0, 0.05);
+  border: 1px solid rgba(255, 69, 0, 0.12);
+  border-radius: 10px;
   word-break: break-all;
-  transition: all 0.2s ease;
+  transition: background 0.18s;
 
-  &:hover {
-    background: #ff45001a;
-    color: #cc3700;
-  }
+  &:hover { background: rgba(255, 69, 0, 0.09); }
+
+  span { flex-shrink: 0; }
 `;
 
-const PostImage = styled.img`
+
+const ImageModalOverlay = styled(motion.div)`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  cursor: zoom-out;
+`;
+
+const ImageModalImg = styled.img`
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+`;
+
+const ImageModalClose = styled.button`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s;
+  &:hover { background: rgba(255,255,255,0.25); }
+`;
+
+const InlineImage = styled.img`
   max-width: 100%;
   height: auto;
-  margin: 12px 0;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  border: 1px solid #f0f0f0;
+  margin-bottom: 16px;
+  cursor: zoom-in;
+  display: block;
+  transition: opacity 0.18s;
+  &:hover { opacity: 0.92; }
+`;
+
+const MarkdownLink = styled.a`
+  color: #ff4500;
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
 `;
 
 const CommentsSection = styled.div`
-  margin-top: 24px;
-  border-top: 2px solid #eee;
+  border-top: 1px solid #f4f4f4;
   padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
 
-  h3 {
-    font-size: 1.2rem;
-    margin-bottom: 16px;
-    color: #1a1a1b;
-    font-weight: 600;
-  }
+const CommentsSectionTitle = styled.h3`
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #bbb;
+  margin-bottom: 16px;
 `;
 
 const Comment = styled.div`
-  padding: 12px;
-  margin: 8px 0;
-  border-left: 3px solid ${props => props.depth === 0 ? '#ff4500' : '#ff45001a'};
-  background: ${props => props.depth % 2 === 0 ? 'white' : '#f8f9fa'};
-  margin-left: ${props => Math.min(props.depth * 16, 64)}px;
-  border-radius: 6px;
+  padding: 14px 16px;
+  margin: 5px 0;
+  margin-left: ${props => Math.min(props.depth * 20, 80)}px;
+  background: ${props => props.depth === 0 ? '#ffffff' : props.depth === 1 ? '#fafafa' : '#f5f5f5'};
+  border: 1px solid ${props => props.depth === 0 ? '#f0ece9' : '#efefef'};
+  border-radius: 10px;
 
   @media (max-width: 768px) {
-    margin-left: ${props => Math.min(props.depth * 10, 40)}px;
+    margin-left: ${props => Math.min(props.depth * 12, 48)}px;
   }
 `;
 
 const CommentHeader = styled.div`
-  font-size: 0.85rem;
-  color: #787c7e;
-  margin-bottom: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 8px;
+`;
 
-  strong {
-    color: #1a1a1b;
-    font-weight: 600;
+const CommentAuthor = styled.span`
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1a1a1b;
+`;
+
+const CommentScore = styled.span`
+  font-size: 0.72rem;
+  color: #bbb;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: #f6f7f8;
+  padding: 2px 7px;
+  border-radius: 20px;
+`;
+
+const RepliesToggle = styled.button`
+  margin-left: auto;
+  border: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #999;
+  cursor: pointer;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #f0f0f0;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(255, 69, 0, 0.08);
+    color: #ff4500;
   }
 `;
 
 const CommentBody = styled.div`
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: #1a1a1b;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: #444;
   white-space: pre-wrap;
   word-break: break-word;
 `;
@@ -220,32 +360,32 @@ const shimmer = keyframes`
 `;
 
 const SkeletonBase = styled.div`
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, #f5f5f5 25%, #ececec 50%, #f5f5f5 75%);
   background-size: 600px 100%;
   animation: ${shimmer} 1.4s infinite linear;
-  border-radius: 4px;
+  border-radius: 6px;
 `;
 
 const SkeletonLine = styled(SkeletonBase)`
-  height: ${props => props.height || '14px'};
+  height: ${props => props.height || '13px'};
   width: ${props => props.width || '100%'};
   margin-bottom: ${props => props.mb || '8px'};
 `;
 
 const SkeletonComment = styled.div`
-  padding: 12px;
-  margin: 8px 0;
-  border-left: 3px solid #f0f0f0;
-  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 6px 0;
+  border-left: 2px solid #f0f0f0;
+  border-radius: 0 8px 8px 0;
 `;
 
-const ErrorMessage = styled.div`
-  color: #ff4444;
-  padding: 16px;
-  text-align: center;
-  background: #ffebee;
-  border-radius: 8px;
-  margin: 12px 0;
+const ErrorMsg = styled.div`
+  color: #ff4500;
+  padding: 12px 16px;
+  background: rgba(255, 69, 0, 0.05);
+  border: 1px solid rgba(255, 69, 0, 0.12);
+  border-radius: 10px;
+  font-size: 0.875rem;
 `;
 
 const isValidThumbnail = (thumbnail) => {
@@ -259,107 +399,170 @@ const CommentSkeleton = () => (
   <>
     {[1, 2, 3, 4, 5].map(i => (
       <SkeletonComment key={i}>
-        <SkeletonLine height="12px" width="120px" mb="10px" />
+        <SkeletonLine height="11px" width="110px" mb="10px" />
         <SkeletonLine width="100%" />
-        <SkeletonLine width="80%" />
+        <SkeletonLine width="72%" />
       </SkeletonComment>
     ))}
   </>
 );
 
-const renderComment = (comment, depth = 0) => {
+function CommentNode({ comment, depth = 0 }) {
+  const [expanded, setExpanded] = React.useState(false);
+
   if (!comment || !comment.body) return null;
+
+  const replies = comment.replies?.data?.children?.filter(c => c.kind === 't1') || [];
+  const hasReplies = replies.length > 0;
+
   return (
-    <div key={comment.id}>
+    <div>
       <Comment depth={depth}>
         <CommentHeader>
-          <strong>u/{comment.author}</strong>
-          <span>⬆️ {new Intl.NumberFormat().format(comment.score)}</span>
+          <CommentAuthor>u/{comment.author}</CommentAuthor>
+          <CommentScore>↑ {new Intl.NumberFormat().format(comment.score)}</CommentScore>
+          {hasReplies && (
+            <RepliesToggle onClick={() => setExpanded(prev => !prev)}>
+              {expanded ? '▲' : '▼'} {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+            </RepliesToggle>
+          )}
         </CommentHeader>
         <CommentBody>{comment.body}</CommentBody>
       </Comment>
-      {comment.replies &&
-        comment.replies.data?.children
-          .filter(child => child.kind === 't1')
-          .map(child => renderComment(child.data, depth + 1))}
+      {hasReplies && expanded && (
+        <div>
+          {replies.map(child => (
+            <CommentNode key={child.data.id} comment={child.data} depth={depth + 1} />
+          ))}
+        </div>
+      )}
     </div>
   );
-};
+}
+
+function MarkdownText({ text }) {
+  const parts = parseMarkdown(text);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.type === 'link') {
+          return <MarkdownLink key={i} href={part.url} target="_blank" rel="noopener noreferrer">{part.label}</MarkdownLink>;
+        }
+        return <span key={i}>{part.content}</span>;
+      })}
+    </>
+  );
+}
 
 function PostDetail({ post, onClose }) {
   const dispatch = useDispatch();
   const comments = useSelector(selectComments);
   const commentsLoading = useSelector(selectCommentsLoading);
   const commentsError = useSelector(selectCommentsError);
+  const [lightboxImg, setLightboxImg] = React.useState(null);
 
   useEffect(() => {
     dispatch(fetchComments({ postId: post.id }));
-    return () => {
-      dispatch(clearComments());
-    };
+    return () => { dispatch(clearComments()); };
   }, [post.id, dispatch]);
 
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) onClose();
-  };
+  const isPostImage = post.url && isImageUrl(post.url);
 
   return (
+    <>
     <Overlay
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onClick={handleOverlayClick}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <DetailContainer
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 50, opacity: 0 }}
+        initial={{ y: 32, opacity: 0, scale: 0.98 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 32, opacity: 0, scale: 0.98 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
       >
-        <CloseButton onClick={onClose}>✕</CloseButton>
+        <ModalHeader>
+          <CloseButton onClick={onClose}>✕</CloseButton>
+          <SubredditTag>r/{post.subreddit}</SubredditTag>
+          <PostTitle>{post.title}</PostTitle>
+          <MetaRow>
+            <MetaItem>
+              <MetaHighlight>u/{post.author}</MetaHighlight>
+            </MetaItem>
+            <MetaItem>
+              <StatBadge>↑ {new Intl.NumberFormat().format(post.score)}</StatBadge>
+            </MetaItem>
+            <MetaItem>
+              <StatBadge>💬 {new Intl.NumberFormat().format(post.num_comments)}</StatBadge>
+            </MetaItem>
+          </MetaRow>
+        </ModalHeader>
 
-        <PostHeader>
-          <h2>{post.title}</h2>
-          <PostMetadata>
-            <span>u/{post.author}</span>
-            <span>•</span>
-            <span>r/{post.subreddit}</span>
-            <span>•</span>
-            <span>⬆️ {new Intl.NumberFormat().format(post.score)}</span>
-            <span>•</span>
-            <span>💬 {new Intl.NumberFormat().format(post.num_comments)}</span>
-          </PostMetadata>
-        </PostHeader>
-
-        {post.selftext && (
-          <PostContent>{post.selftext}</PostContent>
-        )}
-
-        {post.url && !post.url.includes('reddit.com') && (
-          <PostLink href={post.url} target="_blank" rel="noopener noreferrer">
-            🔗 {post.url}
-          </PostLink>
-        )}
-
-        {isValidThumbnail(post.thumbnail) && (
-          <PostImage
-            src={post.thumbnail}
-            alt=""
-            loading="lazy"
-            onError={(e) => { e.target.style.display = 'none'; }}
-          />
-        )}
-
-        <CommentsSection>
-          <h3>Comments</h3>
-          {commentsLoading && <CommentSkeleton />}
-          {commentsError && <ErrorMessage>{commentsError}</ErrorMessage>}
-          {!commentsLoading && !commentsError && comments.length === 0 && (
-            <div>No comments yet</div>
+        <ScrollBody>
+          {post.selftext && (
+            <PostContent>
+              <MarkdownText text={post.selftext} />
+            </PostContent>
           )}
-          {!commentsLoading && !commentsError && comments.map(comment => renderComment(comment))}
-        </CommentsSection>
+
+          {isPostImage && (
+            <InlineImage
+              src={post.url}
+              alt=""
+              loading="lazy"
+              onClick={() => setLightboxImg(post.url)}
+              onError={e => { e.target.style.display = 'none'; }}
+            />
+          )}
+
+          {!isPostImage && post.url && !post.url.includes('reddit.com') && (
+            <PostLink href={post.url} target="_blank" rel="noopener noreferrer">
+              <span>🔗</span> {post.url}
+            </PostLink>
+          )}
+
+          {!isPostImage && isValidThumbnail(post.thumbnail) && (
+            <InlineImage
+              src={post.thumbnail}
+              alt=""
+              loading="lazy"
+              onClick={() => setLightboxImg(post.thumbnail)}
+              onError={e => { e.target.style.display = 'none'; }}
+            />
+          )}
+
+          <CommentsSection>
+            <CommentsSectionTitle>Comments</CommentsSectionTitle>
+            {commentsLoading && <CommentSkeleton />}
+            {commentsError && <ErrorMsg>{commentsError}</ErrorMsg>}
+            {!commentsLoading && !commentsError && comments.length === 0 && (
+              <div style={{ color: '#bbb', fontSize: '0.875rem' }}>No comments yet.</div>
+            )}
+            {!commentsLoading && !commentsError && comments.map(comment => <CommentNode key={comment.id} comment={comment} depth={0} />)}
+          </CommentsSection>
+        </ScrollBody>
       </DetailContainer>
     </Overlay>
+
+    <AnimatePresence>
+      {lightboxImg && (
+        <ImageModalOverlay
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setLightboxImg(null)}
+        >
+          <ImageModalClose onClick={() => setLightboxImg(null)}>✕</ImageModalClose>
+          <ImageModalImg
+            src={lightboxImg}
+            alt=""
+            onClick={e => e.stopPropagation()}
+          />
+        </ImageModalOverlay>
+      )}
+    </AnimatePresence>
+    </>
   );
 }
 
