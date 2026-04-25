@@ -34,20 +34,22 @@ const isImageUrl = (url) => /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url);
 
 const Overlay = styled(motion.div)`
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(10, 10, 10, 0.6);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 1000;
-  overflow-y: auto;
-  padding: 24px 20px;
   display: flex;
   justify-content: center;
+  overflow: hidden;
 
   @media (max-width: 768px) {
-    padding: 0;
-    background: #f6f7f8;
+    background: #ffffff;
     backdrop-filter: none;
+    align-items: flex-start;
   }
 `;
 
@@ -57,18 +59,27 @@ const DetailContainer = styled(motion.div)`
   max-width: 720px;
   margin: 40px auto;
   border-radius: 18px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
-  max-height: 88vh;
+  max-height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(0, 0, 0, 0.08);
+  -webkit-overflow-scrolling: touch;
 
   @media (max-width: 768px) {
     margin: 0;
     border-radius: 0;
-    max-height: 100vh;
-    min-height: 100vh;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    min-height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     box-shadow: none;
   }
 `;
@@ -465,6 +476,21 @@ function PostDetail({ post, onClose }) {
     dispatch(fetchComments({ postId: post.id }));
     return () => { dispatch(clearComments()); };
   }, [post.id, dispatch]);
+
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
 
   const isPostImage = post.url && isImageUrl(post.url);
 
