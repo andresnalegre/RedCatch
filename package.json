@@ -2,7 +2,7 @@
   "name": "redcatch",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://andresnalegre.github.io/RedCatch",
+  "homepage": "https://redcatch.andresnicolas.com",
   "dependencies": {
     "@reduxjs/toolkit": "^2.5.0",
     "axios": "^1.7.9",
